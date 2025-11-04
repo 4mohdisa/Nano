@@ -14,7 +14,7 @@ PixelPrompt is an intelligent image editing assistant that allows you to upload 
 - **🔒 Privacy First**: Secure processing with enterprise-grade security
 - **☁️ Cloud Storage**: Save your edits with Supabase-powered cloud storage
 - **📱 Mobile Responsive**: Works seamlessly on all devices
-- **🎯 Credit System**: 2 free generations per day for all users
+- **🎯 Credit System**: 3 free generations per day for all users
 - **🌓 Dark/Light Mode**: Beautiful interface in both themes
 
 ## 🚀 Quick Start
@@ -176,7 +176,7 @@ npm run lint     # Run ESLint
 ## 🎨 Features in Detail
 
 ### Credit System
-- Regular users: 2 free generations per day
+- Regular users: 3 free generations per day
 - Automatic daily reset at midnight
 - Admin users: Unlimited generations
 - Real-time credit display in dashboard

@@ -260,9 +260,9 @@ export class DatabaseService {
     // Check if user is admin (unlimited credits)
     const isAdmin = await this.checkAdminStatus(userId)
     if (!isAdmin) {
-      // Check daily limit (2 generations per day) for regular users
-      if (currentCredits.dailyGenerations >= 2) {
-        throw new Error('Daily generation limit reached (2 per day)')
+      // Check daily limit (3 generations per day) for regular users
+      if (currentCredits.dailyGenerations >= 3) {
+        throw new Error('Daily generation limit reached (3 per day)')
       }
     }
 
@@ -347,8 +347,8 @@ export class DatabaseService {
       remainingCredits = 999 // Show high number for unlimited
     } else {
       // Regular users have daily limits
-      remainingCredits = Math.max(0, 2 - credits.dailyGenerations)
-      canGenerate = credits.dailyGenerations < 2
+      remainingCredits = Math.max(0, 3 - credits.dailyGenerations)
+      canGenerate = credits.dailyGenerations < 3
     }
 
     return { canGenerate, remainingCredits, credits, isAdmin }

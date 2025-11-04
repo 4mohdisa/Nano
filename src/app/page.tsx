@@ -103,7 +103,7 @@ export default function LandingPage() {
                   style={{ animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}
                 >
                   <Zap className="mr-2 sm:mr-3 h-5 w-5" />
-                  <span className="text-sm sm:text-base">🚀 Try for FREE - 2 Generations Daily!</span>
+                  <span className="text-sm sm:text-base">🚀 Try for FREE - 3 Generations Daily!</span>
                   <ArrowRight className="ml-2 sm:ml-3 h-5 w-5" />
                 </Button>
               )}
