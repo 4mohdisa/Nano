@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, createContext, useContext, ReactNode } from 'react'
-import { X, Download, ExternalLink, ZoomIn, ZoomOut } from 'lucide-react'
+import { X, Download, ExternalLink, ZoomIn, ZoomOut, HelpCircle } from 'lucide-react'
 import Image from 'next/image'
 
 interface ImageViewerProps {
@@ -64,7 +64,7 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
     if (downloadUrl) {
       const link = document.createElement('a')
       link.href = downloadUrl
-      link.download = `fixtral-image-${Date.now()}.png`
+      link.download = `nano-image-${Date.now()}.png`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -73,23 +73,23 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4"
       onClick={handleBackdropClick}
     >
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors sm:p-3"
+        className="absolute top-4 right-4 z-10 rounded-full bg-white/10 hover:bg-white/20 p-3 text-white transition-all duration-200"
       >
-        <X className="h-5 w-5 sm:h-6 sm:w-6" />
+        <X className="h-5 w-5" />
       </button>
 
       {/* Action buttons */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
         {downloadUrl && (
           <button
             onClick={handleDownload}
-            className="rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors"
+            className="rounded-full bg-white/10 hover:bg-white/20 p-3 text-white transition-all duration-200"
             title="Download Image"
           >
             <Download className="h-5 w-5" />
@@ -100,7 +100,7 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
             href={externalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-black/50 p-2 text-white hover:bg-black/70 transition-colors"
+            className="rounded-full bg-white/10 hover:bg-white/20 p-3 text-white transition-all duration-200"
             title="Open Original"
           >
             <ExternalLink className="h-5 w-5" />
@@ -108,71 +108,64 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
         )}
 
         {/* Zoom Controls */}
-        <div className="flex items-center space-x-1 bg-black/50 rounded-full px-2 py-1">
+        <div className="flex items-center gap-1 bg-white/10 rounded-full px-2 py-1 ml-2">
           <button
             onClick={zoomOut}
-            className="p-1.5 sm:p-1 text-white hover:bg-white/20 rounded transition-colors"
+            className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
             title="Zoom Out (-)"
           >
             <ZoomOut className="h-4 w-4" />
           </button>
           <button
             onClick={resetZoom}
-            className="px-2 py-1 text-white hover:bg-white/20 rounded text-xs font-medium transition-colors min-w-[50px]"
+            className="px-3 py-1 text-white hover:bg-white/10 rounded-full text-sm font-medium transition-colors min-w-[60px]"
             title="Reset Zoom (0)"
           >
             {Math.round(zoom * 100)}%
           </button>
           <button
             onClick={zoomIn}
-            className="p-1.5 sm:p-1 text-white hover:bg-white/20 rounded transition-colors"
+            className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
             title="Zoom In (+)"
           >
             <ZoomIn className="h-4 w-4" />
           </button>
           <button
             onClick={() => setShowHelp(!showHelp)}
-            className="p-1.5 sm:p-1 text-white hover:bg-white/20 rounded transition-colors ml-2"
+            className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors ml-1"
             title="Show Help"
           >
-            <span className="text-xs font-bold">?</span>
+            <HelpCircle className="h-4 w-4" />
           </button>
         </div>
       </div>
 
       {/* Help Overlay */}
       {showHelp && (
-        <div className="absolute top-16 left-4 right-4 z-20 bg-black/80 backdrop-blur-sm rounded-lg p-4 max-w-sm">
-          <div className="text-white text-sm space-y-2">
-            <h3 className="font-semibold mb-2">Image Viewer Controls</h3>
-            <div className="space-y-1">
-              <div className="flex justify-between">
-                <span>Zoom In:</span>
-                <span className="text-gray-300">+</span>
+        <div className="absolute top-20 left-4 z-20 bg-black/80 backdrop-blur-xl rounded-2xl p-5 max-w-xs border border-white/10">
+          <div className="text-white text-sm space-y-3">
+            <h3 className="font-semibold text-base mb-3">Keyboard Shortcuts</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-white/70">Zoom In</span>
+                <kbd className="px-2 py-1 bg-white/10 rounded text-xs">+</kbd>
               </div>
-              <div className="flex justify-between">
-                <span>Zoom Out:</span>
-                <span className="text-gray-300">-</span>
+              <div className="flex justify-between items-center">
+                <span className="text-white/70">Zoom Out</span>
+                <kbd className="px-2 py-1 bg-white/10 rounded text-xs">-</kbd>
               </div>
-              <div className="flex justify-between">
-                <span>Reset Zoom:</span>
-                <span className="text-gray-300">0</span>
+              <div className="flex justify-between items-center">
+                <span className="text-white/70">Reset Zoom</span>
+                <kbd className="px-2 py-1 bg-white/10 rounded text-xs">0</kbd>
               </div>
-              <div className="flex justify-between">
-                <span>Double Click:</span>
-                <span className="text-gray-300">Reset Zoom</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Close:</span>
-                <span className="text-gray-300">ESC</span>
+              <div className="flex justify-between items-center">
+                <span className="text-white/70">Close</span>
+                <kbd className="px-2 py-1 bg-white/10 rounded text-xs">ESC</kbd>
               </div>
             </div>
-            <button
-              onClick={() => setShowHelp(false)}
-              className="mt-2 text-xs text-gray-400 hover:text-white"
-            >
-              Click to close
-            </button>
+            <p className="text-xs text-white/50 pt-2 border-t border-white/10">
+              Double-click image to reset zoom
+            </p>
           </div>
         </div>
       )}
@@ -188,8 +181,8 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
           }}
         >
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
             </div>
           )}
 
@@ -198,7 +191,7 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
             alt={alt}
             width={1920}
             height={1080}
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl cursor-pointer"
+            className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl cursor-pointer"
             priority
             unoptimized={src?.startsWith('data:')}
             sizes="(max-width: 768px) 95vw, (max-width: 1200px) 90vw, 85vw"
@@ -209,18 +202,15 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
           />
 
           {/* Image info overlay */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4 rounded-b-lg">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-2xl">
             <div className="flex justify-between items-end">
               <div className="flex-1">
-                <p className="text-white text-sm opacity-90">{alt}</p>
+                <p className="text-white font-medium">{alt}</p>
                 {zoom !== 1 && (
-                  <p className="text-white/70 text-xs mt-1">
-                    Zoom: {Math.round(zoom * 100)}% • Double-click to reset
+                  <p className="text-white/60 text-sm mt-1">
+                    {Math.round(zoom * 100)}% • Double-click to reset
                   </p>
                 )}
-              </div>
-              <div className="text-white/70 text-xs">
-                Press ? for help
               </div>
             </div>
           </div>

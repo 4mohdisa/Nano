@@ -1,25 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UploadView } from '@/components/upload-view'
 import { EditorView } from '@/components/editor-view'
 import { HistoryView } from '@/components/history-view'
 import { ImageViewerProvider } from '@/components/image-viewer'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { UserMenu } from '@/components/user-menu'
-import { AuthModal } from '@/components/auth-modal'
-import { useAuth } from '@/lib/auth-context'
-import { Image, History, ArrowLeft, User, Sparkles } from 'lucide-react'
+import { Upload, History, Wand2, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('upload')
   const [pendingEditorItems, setPendingEditorItems] = useState(0)
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const { user, loading } = useAuth()
 
   // Listen for new editor items and switch to editor tab
   useEffect(() => {
@@ -82,103 +76,92 @@ export default function Dashboard() {
 
   return (
     <ImageViewerProvider>
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="min-h-screen bg-background">
+        {/* Ambient Background */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-[hsl(var(--nano-blue))] rounded-full blur-[200px] opacity-10" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[hsl(var(--nano-purple))] rounded-full blur-[200px] opacity-10" />
+        </div>
+
         {/* Header */}
-        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mobile-safe-top">
-          <div className="container mx-auto px-4 py-3 mobile-container">
+        <header className="relative z-10 nano-glass border-b border-white/5">
+          <div className="nano-container py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="flex items-center gap-4">
                 <Link href="/">
-                  <Button variant="ghost" size="sm" className="mr-1 sm:mr-2 mobile-button touch-target">
-                    <ArrowLeft className="h-4 w-4 mr-1" />
-                    <span className="hidden sm:inline">Back</span>
+                  <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-white">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
                   </Button>
                 </Link>
-                <Link href="/" className="flex items-center space-x-2">
-                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mobile-responsive-heading hover:opacity-80 transition-opacity">
-                    PixelPrompt
-                  </h1>
-                  <span className="text-xs sm:text-sm font-medium text-muted-foreground hidden md:inline">AI</span>
+                <div className="h-6 w-px bg-border/50" />
+                <Link href="/" className="flex items-center gap-3">
+                  <Image
+                    src="/logo-icon.png"
+                    alt="Nano Logo"
+                    width={36}
+                    height={36}
+                    className="rounded-xl"
+                  />
+                  <span className="text-xl font-bold text-white">Nano</span>
                 </Link>
               </div>
-              <div className="flex items-center space-x-1 sm:space-x-4">
-                <div className="hidden lg:flex items-center space-x-2 text-xs text-muted-foreground">
-                  <span>v0.2.0</span>
-                  <span>•</span>
-                  <span>AI Image Editing</span>
-                </div>
-                {!loading && (
-                  user ? (
-                    <UserMenu />
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      onClick={() => setShowAuthModal(true)}
-                      className="flex items-center space-x-1 sm:space-x-2 mobile-button touch-target"
-                    >
-                      <User className="h-4 w-4" />
-                      <span className="hidden sm:inline">Sign In</span>
-                    </Button>
-                  )
-                )}
-                <ThemeToggle />
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground hidden sm:inline">AI Image Editor</span>
+                <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-secondary/50">v1.0</span>
               </div>
             </div>
           </div>
         </header>
 
         {/* Main Content */}
-        <main className="container mx-auto px-4 py-4 sm:py-8 mobile-container">
+        <main className="relative z-10 nano-container py-8">
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-10 sm:h-12 p-1 bg-muted/50 backdrop-blur-sm border shadow-lg mobile-tabs">
-              <TabsTrigger
-                value="upload"
-                className="flex items-center justify-center space-x-1 sm:space-x-2 h-8 sm:h-10 rounded-lg font-medium transition-all duration-200 hover:bg-background/50 data-[state=active]:bg-background data-[state=active]:shadow-md touch-target"
-              >
-                <Image className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Upload</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value="editor"
-                className="flex items-center justify-center space-x-1 sm:space-x-2 h-8 sm:h-10 rounded-lg font-medium transition-all duration-200 hover:bg-background/50 data-[state=active]:bg-background data-[state=active]:shadow-md relative touch-target"
-              >
-                <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Editor</span>
-                {pendingEditorItems > 0 && (
-                  <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded-full w-4 h-4 sm:w-6 sm:h-6 flex items-center justify-center font-bold shadow-lg animate-pulse border-2 border-background">
-                    {pendingEditorItems}
-                  </div>
-                )}
-              </TabsTrigger>
-              <TabsTrigger
-                value="history"
-                className="flex items-center justify-center space-x-1 sm:space-x-2 h-8 sm:h-10 rounded-lg font-medium transition-all duration-200 hover:bg-background/50 data-[state=active]:bg-background data-[state=active]:shadow-md touch-target"
-              >
-                <History className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">History</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="flex justify-center mb-8">
+              <TabsList className="grid grid-cols-3 w-full max-w-md">
+                <TabsTrigger
+                  value="upload"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span className="hidden sm:inline">Upload</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="editor"
+                  className="flex items-center justify-center gap-2 relative"
+                >
+                  <Wand2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Editor</span>
+                  {pendingEditorItems > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full bg-[hsl(var(--nano-red))] text-white animate-pulse">
+                      {pendingEditorItems}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="history"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <History className="w-4 h-4" />
+                  <span className="hidden sm:inline">History</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-            <TabsContent value="upload" className="mt-4 sm:mt-6 mobile-scroll">
+            <TabsContent value="upload" className="nano-fade-in">
               <UploadView />
             </TabsContent>
 
-            <TabsContent value="editor" className="mt-4 sm:mt-6 mobile-scroll">
+            <TabsContent value="editor" className="nano-fade-in">
               <EditorView />
             </TabsContent>
 
-            <TabsContent value="history" className="mt-4 sm:mt-6 mobile-scroll">
+            <TabsContent value="history" className="nano-fade-in">
               <HistoryView />
             </TabsContent>
           </Tabs>
         </main>
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-      />
     </ImageViewerProvider>
   )
 }

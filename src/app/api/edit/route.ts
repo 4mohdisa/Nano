@@ -47,7 +47,8 @@ export async function POST(request: NextRequest) {
       }
       contentType = matches[1];
       const base64Data = matches[2];
-      imageBuffer = Buffer.from(base64Data, 'base64');
+      const buffer = Buffer.from(base64Data, 'base64');
+      imageBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
       console.log('✅ Processed base64 image, size:', imageBuffer.byteLength, 'bytes');
     } else {
       // Download from URL

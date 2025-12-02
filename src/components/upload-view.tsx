@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { Upload, Wand2, X, Image as ImageIcon, Loader2, CheckCircle } from 'lucide-react'
+import { Upload, Wand2, X, Image as ImageIcon, Loader2, CheckCircle, Sparkles } from 'lucide-react'
 import Image from 'next/image'
 import { useImageViewer } from './image-viewer'
 
@@ -152,102 +151,84 @@ export function UploadView() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 mobile-container">
-      {/* Header Section */}
-      <div className="text-center py-8 sm:py-16 px-4 bg-gradient-to-b from-transparent via-muted/10 to-transparent mobile-container">
-        <div className="flex flex-col items-center justify-center space-y-4 mb-6 sm:mb-8">
-          <div className="flex items-center justify-center space-x-3 sm:space-x-4">
-            <div className="relative flex-shrink-0">
-              <Wand2 className="h-8 w-8 sm:h-12 sm:w-12 text-primary animate-pulse" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-yellow-500 rounded-full animate-ping opacity-75"></div>
-            </div>
-            <h1 className="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent mobile-responsive-large">
-              Fixtral
-            </h1>
-          </div>
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl nano-gradient mb-4">
+          <Upload className="w-8 h-8 text-white" />
         </div>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto mb-8 sm:mb-12 leading-relaxed mobile-responsive-text px-4 sm:px-0">
-          AI-Powered Image Editor - Upload your image and describe the edits you want
+        <h1 className="text-3xl sm:text-4xl font-bold text-white">
+          Upload Your Image
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Drop an image and describe the changes you want AI to make
         </p>
+      </div>
 
-        {/* Workflow Steps */}
-        <div className="flex justify-center px-4">
-          <div className="flex flex-row items-center justify-center space-x-2 sm:space-x-4 sm:space-x-6 bg-gradient-to-r from-muted/30 via-muted/50 to-muted/30 p-3 sm:p-6 rounded-2xl border shadow-lg backdrop-blur-sm w-full max-w-md sm:max-w-none mx-auto">
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-7 h-7 sm:w-10 sm:h-10 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg touch-target">
-                1
-              </div>
-              <span className="text-xs sm:text-sm font-semibold">Upload</span>
+      {/* Workflow Steps */}
+      <div className="flex justify-center">
+        <div className="inline-flex items-center gap-4 sm:gap-8 p-4 rounded-2xl nano-glass">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[hsl(var(--nano-blue))] flex items-center justify-center text-sm font-bold text-white">
+              1
             </div>
-            <div className="flex items-center justify-center">
-              <span className="text-xs sm:text-sm font-bold text-muted-foreground px-1 sm:px-2">→</span>
+            <span className="text-sm font-medium text-white hidden sm:inline">Upload</span>
+          </div>
+          <div className="w-8 h-px bg-border" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[hsl(var(--nano-purple))]/30 flex items-center justify-center text-sm font-bold text-muted-foreground">
+              2
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-7 h-7 sm:w-10 sm:h-10 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg touch-target">
-                2
-              </div>
-              <span className="text-xs sm:text-sm font-semibold">Edit</span>
+            <span className="text-sm font-medium text-muted-foreground hidden sm:inline">Edit</span>
+          </div>
+          <div className="w-8 h-px bg-border" />
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-[hsl(var(--nano-green))]/30 flex items-center justify-center text-sm font-bold text-muted-foreground">
+              3
             </div>
-            <div className="flex items-center justify-center">
-              <span className="text-xs sm:text-sm font-bold text-muted-foreground px-1 sm:px-2">→</span>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-3">
-              <div className="w-7 h-7 sm:w-10 sm:h-10 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shadow-lg touch-target">
-                3
-              </div>
-              <span className="text-xs sm:text-sm font-semibold">Save</span>
-            </div>
+            <span className="text-sm font-medium text-muted-foreground hidden sm:inline">Save</span>
           </div>
         </div>
       </div>
 
-      {/* Upload Interface */}
-      <Card className="border-primary/20 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5">
-          <CardTitle className="flex items-center space-x-3">
-            <Upload className="h-6 w-6 text-primary" />
-            <span>Upload & Edit Your Image</span>
-          </CardTitle>
-          <CardDescription>
-            Upload an image and describe the edits you want AI to make
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6 pt-6">
-          {/* Image Upload Area */}
-          <div className="space-y-2">
-            <Label htmlFor="image-upload" className="text-base font-semibold">
-              1. Upload Image
+      {/* Main Upload Card */}
+      <div className="nano-card p-6 sm:p-8">
+        <div className="space-y-6">
+          {/* Upload Area */}
+          <div className="space-y-3">
+            <Label className="text-base font-semibold text-white flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[hsl(var(--nano-blue))]/20 flex items-center justify-center text-xs font-bold text-[hsl(var(--nano-blue))]">1</span>
+              Upload Image
             </Label>
 
             {!uploadedImage ? (
               <div
                 onDrop={handleDrop}
                 onDragOver={handleDragOver}
-                className="border-2 border-dashed border-muted-foreground/20 rounded-xl p-8 sm:p-12 text-center hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 cursor-pointer group"
                 onClick={() => fileInputRef.current?.click()}
+                className="relative border-2 border-dashed border-border/50 rounded-2xl p-12 text-center cursor-pointer transition-all duration-300 hover:border-[hsl(var(--nano-blue))] hover:bg-[hsl(var(--nano-blue))]/5 group"
               >
                 <input
                   ref={fileInputRef}
-                  id="image-upload"
                   type="file"
                   accept="image/*"
                   className="hidden"
                   onChange={handleFileSelect}
                 />
-                <div className="flex flex-col items-center space-y-4">
-                  <div className="p-4 bg-primary/10 rounded-full group-hover:bg-primary/20 transition-colors">
-                    <Upload className="h-10 w-10 text-primary" />
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-[hsl(var(--nano-blue))]/10 flex items-center justify-center group-hover:bg-[hsl(var(--nano-blue))]/20 transition-colors">
+                    <Upload className="w-8 h-8 text-[hsl(var(--nano-blue))]" />
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-lg font-semibold">Drop your image here or click to browse</p>
+                  <div>
+                    <p className="text-lg font-semibold text-white mb-1">Drop your image here</p>
                     <p className="text-sm text-muted-foreground">
-                      Supports PNG, JPG, WEBP (max 10MB)
+                      or click to browse • PNG, JPG, WEBP up to 10MB
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="relative border rounded-xl overflow-hidden group">
+              <div className="relative rounded-2xl overflow-hidden border border-border/50 bg-secondary/30">
                 <div
                   className="relative aspect-video cursor-pointer"
                   onClick={() => showImage(uploadedImage.preview, uploadedImage.name, uploadedImage.preview)}
@@ -256,110 +237,104 @@ export function UploadView() {
                     src={uploadedImage.preview}
                     alt={uploadedImage.name}
                     fill
-                    className="object-contain bg-muted"
+                    className="object-contain"
                     unoptimized
                   />
                 </div>
-                <div className="absolute top-2 right-2 flex space-x-2">
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeImage()
-                    }}
-                    className="shadow-lg"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="p-4 bg-card border-t">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <ImageIcon className="h-5 w-5 text-primary" />
-                      <div>
-                        <p className="text-sm font-medium">{uploadedImage.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(uploadedImage.size)}
-                        </p>
-                      </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={removeImage}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 text-white"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+                <div className="p-4 border-t border-border/30 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[hsl(var(--nano-green))]/10 flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-[hsl(var(--nano-green))]" />
                     </div>
-                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    <div>
+                      <p className="text-sm font-medium text-white truncate max-w-[200px]">{uploadedImage.name}</p>
+                      <p className="text-xs text-muted-foreground">{formatFileSize(uploadedImage.size)}</p>
+                    </div>
                   </div>
+                  <CheckCircle className="w-5 h-5 text-[hsl(var(--nano-green))]" />
                 </div>
               </div>
             )}
           </div>
 
           {/* Prompt Input */}
-          <div className="space-y-2">
-            <Label htmlFor="edit-prompt" className="text-base font-semibold">
-              2. Describe Your Edits
+          <div className="space-y-3">
+            <Label className="text-base font-semibold text-white flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[hsl(var(--nano-purple))]/20 flex items-center justify-center text-xs font-bold text-[hsl(var(--nano-purple))]">2</span>
+              Describe Your Edits
             </Label>
             <Textarea
-              id="edit-prompt"
-              placeholder="Example: Remove the person in the background, enhance the colors to make them more vibrant, add a sunset sky..."
+              placeholder="Example: Remove the background, enhance colors, add a sunset sky, make it look vintage..."
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              className="min-h-[120px] resize-none"
+              className="min-h-[120px] bg-secondary/50 border-border/50 focus:border-[hsl(var(--nano-purple))] resize-none text-base"
               disabled={!uploadedImage}
             />
             <p className="text-sm text-muted-foreground">
-              Be specific about what changes you want - the more detail, the better the result!
+              Be specific about what changes you want — the more detail, the better the result!
             </p>
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-center pt-4">
+          <div className="pt-4">
             <Button
               onClick={sendToEditor}
               disabled={!uploadedImage || !prompt.trim() || isProcessing}
-              size="lg"
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full h-14 text-base font-semibold nano-button"
             >
               {isProcessing ? (
                 <>
-                  <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-3 animate-spin" />
                   Processing...
                 </>
               ) : (
                 <>
-                  <Wand2 className="mr-3 h-5 w-5" />
+                  <Wand2 className="w-5 h-5 mr-3" />
                   Continue to Editor
                 </>
               )}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Tips Section */}
-      <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
-        <CardContent className="pt-6">
-          <h3 className="font-semibold mb-4 flex items-center space-x-2">
-            <Wand2 className="h-5 w-5 text-primary" />
-            <span>Tips for Better Results</span>
-          </h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-start space-x-2">
-              <span className="text-primary font-bold">•</span>
-              <span>Be specific about what you want to change (e.g., "remove the blue car" instead of "remove object")</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-primary font-bold">•</span>
-              <span>Describe the desired style or mood (e.g., "make it look more professional" or "add a vintage filter")</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-primary font-bold">•</span>
-              <span>Use high-quality images for best results (clear, well-lit photos work best)</span>
-            </li>
-            <li className="flex items-start space-x-2">
-              <span className="text-primary font-bold">•</span>
-              <span>You'll have a chance to refine your prompt in the Editor before generating</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
+      {/* Tips Card */}
+      <div className="nano-card p-6 border-[hsl(var(--nano-blue))]/20">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-[hsl(var(--nano-blue))]/10 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5 text-[hsl(var(--nano-blue))]" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-white mb-3">Tips for Better Results</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <span className="text-[hsl(var(--nano-blue))]">•</span>
+                <span>Be specific about what you want to change (e.g., "remove the blue car" instead of "remove object")</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[hsl(var(--nano-blue))]">•</span>
+                <span>Describe the desired style or mood (e.g., "make it look more professional" or "add a vintage filter")</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[hsl(var(--nano-blue))]">•</span>
+                <span>Use high-quality images for best results (clear, well-lit photos work best)</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-[hsl(var(--nano-blue))]">•</span>
+                <span>You'll have a chance to refine your prompt in the Editor before generating</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -1,18 +1,11 @@
 // src/app/api/reddit/posts/route.ts
-export const runtime = 'nodejs'; // ensure Node runtime (Buffer required)
+export const runtime = 'nodejs'
 
-import type { NextRequest } from 'next/server';
-import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import type { NextRequest } from 'next/server'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
-// Dedicated endpoints for the exact workflow
-const googleGenAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
-const googleGeminiModel = googleGenAI ? googleGenAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) : null;
-
-const openRouterClient = process.env.OPENROUTER_API_KEY ? new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
-}) : null;
+const googleGenAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null
+const googleGeminiModel = googleGenAI ? googleGenAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) : null
 
 const TOKEN_URL = 'https://www.reddit.com/api/v1/access_token';
 const API_BASE = 'https://oauth.reddit.com';

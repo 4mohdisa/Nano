@@ -1,11 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-// Using native textarea instead
-import { Badge } from '@/components/ui/badge'
-import { Download, Wand2, Loader2, Save, Eye, EyeOff, CheckCircle, XCircle, Image as ImageIcon } from 'lucide-react'
+import { Textarea } from '@/components/ui/textarea'
+import { Download, Wand2, Loader2, Save, Eye, EyeOff, CheckCircle, Sparkles, ArrowLeftRight } from 'lucide-react'
 import Image from 'next/image'
 import { useImageViewer } from './image-viewer'
 
@@ -290,11 +288,10 @@ export function EditorView() {
   const [editResult, setEditResult] = useState<EditResult | null>(null)
   const [comparisonMode, setComparisonMode] = useState<'side-by-side' | 'overlay'>('side-by-side')
   const [showOriginal, setShowOriginal] = useState(true)
-  const [userCredits, setUserCredits] = useState<{ dailyGenerations: number; remainingCredits: number; isAdmin: boolean } | null>(null)
   const [savedItems, setSavedItems] = useState<EditResult[]>([])
   const { showImage } = useImageViewer()
 
-  // Load pending item and user credits from localStorage when component mounts
+  // Load pending item from localStorage when component mounts
   useEffect(() => {
     const loadPendingItem = () => {
       console.log('EditorView: Loading pending item...')
@@ -322,25 +319,7 @@ export function EditorView() {
       }
     }
 
-    const loadUserCredits = async () => {
-      const userId = localStorage.getItem('user_id')
-      if (userId) {
-        try {
-          const { DatabaseService } = await import('@/lib/database')
-          const { canGenerate, remainingCredits, credits, isAdmin } = await DatabaseService.checkCreditLimit(userId)
-          setUserCredits({
-            dailyGenerations: credits.dailyGenerations,
-            remainingCredits,
-            isAdmin
-          })
-        } catch (error) {
-          console.error('Error loading user credits:', error)
-        }
-      }
-    }
-
     loadPendingItem()
-    loadUserCredits()
 
     // Also listen for storage changes in case item is set from another tab
     const handleStorageChange = (e: StorageEvent) => {
@@ -364,33 +343,7 @@ export function EditorView() {
   const generateEditedImage = async () => {
     if (!currentItem || !editPrompt.trim()) return
 
-    // Check user credits before generation
-    const userId = localStorage.getItem('user_id')
-    const userEmail = localStorage.getItem('user_email')
-
-    console.log('Generate image - Auth check:', { userId, userEmail })
-
-    if (!userId) {
-      console.error('No user ID found - user not signed in')
-      alert('Please sign in to generate images!')
-      return
-    }
-
-    try {
-      const { DatabaseService } = await import('@/lib/database')
-      const { canGenerate, remainingCredits } = await DatabaseService.checkCreditLimit(userId)
-
-      if (!canGenerate) {
-        alert(`You've reached your daily limit of 2 image generations. Come back tomorrow!`)
-        return
-      }
-
-      setIsEditing(true)
-    } catch (error) {
-      console.error('Error checking credits:', error)
-      alert('Error checking your credits. Please try again.')
-      return
-    }
+    setIsEditing(true)
 
     try {
       const response = await fetch('/api/edit', {
@@ -416,24 +369,6 @@ export function EditorView() {
 
         if (!hasValidImage) {
           console.warn('No valid image data in result:', { editedContent: editedContent?.substring(0, 50) })
-        }
-
-        // Increment user credits for successful generation
-        try {
-          const { DatabaseService } = await import('@/lib/database')
-          await DatabaseService.incrementUserCredits(userId)
-
-          // Update local credit state
-          if (userCredits) {
-            setUserCredits({
-              dailyGenerations: userCredits.dailyGenerations + 1,
-              remainingCredits: userCredits.remainingCredits - 1,
-              isAdmin: userCredits.isAdmin
-            })
-          }
-        } catch (creditError) {
-          console.error('Error updating credits:', creditError)
-          // Don't block the generation if credit update fails
         }
 
         const editResult: EditResult = {
@@ -468,12 +403,6 @@ export function EditorView() {
   const saveToHistory = async (result: EditResult) => {
     console.log('🚀 Starting comprehensive save to history process...')
 
-    // Get user ID from localStorage (set by auth context)
-    const userId = localStorage.getItem('user_id')
-    const userEmail = localStorage.getItem('user_email')
-
-    console.log('Save to history - User ID:', userId, 'Email:', userEmail)
-
     // Double-check that we have valid result data
     if (!result || !result.postId) {
       console.error('❌ Invalid result data for saving:', result)
@@ -484,7 +413,6 @@ export function EditorView() {
     // Create comprehensive data object for all save methods
     const historyItem = {
       id: `history_${Date.now()}`,
-      userId: userId || 'anonymous',
       postId: result.postId,
       postTitle: currentItem?.post?.title || 'Generated Image',
       requestText: currentItem?.post?.description || result.analysis || 'AI Generated',
@@ -510,35 +438,30 @@ export function EditorView() {
     let downloadUrl: string | undefined
 
     try {
-      // Method 1: Try database save first (if user is authenticated)
-      if (userId) {
-        console.log('1️⃣ Attempting database save...')
-        const { DatabaseService } = await import('@/lib/database')
+      // Method 1: Try database save first
+      console.log('1️⃣ Attempting database save...')
+      const { DatabaseService } = await import('@/lib/database')
 
-        const dbHistoryItem = {
-          user_id: userId,
-          post_id: result.postId,
-          post_title: historyItem.postTitle,
-          request_text: historyItem.requestText,
-          analysis: result.analysis,
-          edit_prompt: editPrompt,
-          original_image_url: historyItem.originalImageUrl,
-          edited_image_url: historyItem.editedImageUrl,
-          post_url: historyItem.postUrl,
-          method: result.method || 'google_gemini',
-          status: 'completed' as const,
-          processing_time: historyItem.processingTime
-        }
+      const dbHistoryItem = {
+        post_id: result.postId,
+        post_title: historyItem.postTitle,
+        request_text: historyItem.requestText,
+        analysis: result.analysis,
+        edit_prompt: editPrompt,
+        original_image_url: historyItem.originalImageUrl,
+        edited_image_url: historyItem.editedImageUrl,
+        post_url: historyItem.postUrl,
+        method: result.method || 'google_gemini',
+        status: 'completed' as const,
+        processing_time: historyItem.processingTime
+      }
 
-        const dbResult = await DatabaseService.saveEditHistory(dbHistoryItem, userId)
-        console.log('✅ Database save result:', dbResult)
+      const dbResult = await DatabaseService.saveEditHistory(dbHistoryItem)
+      console.log('✅ Database save result:', dbResult)
 
-        if (dbResult) {
-          saveSuccess = true
-          saveMethod = 'database'
-        }
-      } else {
-        console.log('⏭️ Skipping database save (user not authenticated)')
+      if (dbResult) {
+        saveSuccess = true
+        saveMethod = 'database'
       }
 
       // Method 2: Always try comprehensive local browser save
@@ -629,165 +552,99 @@ export function EditorView() {
     document.body.removeChild(link)
   }
 
-
-
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8">
       {/* Header */}
-      <div className="text-center py-12 px-4 bg-gradient-to-b from-transparent via-muted/10 to-transparent">
-        <div className="flex items-center justify-center space-x-4 mb-6">
-          <div className="relative">
-            <Wand2 className="h-12 w-12 text-primary animate-pulse" />
-            <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full animate-ping opacity-75"></div>
-          </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent">
-            AI Image Editor
-          </h1>
+      <div className="text-center space-y-4">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl nano-gradient mb-4">
+          <Wand2 className="w-8 h-8 text-white" />
         </div>
-        <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          Edit prompts and generate AI-enhanced images using Google Gemini 2.5 Flash Image
+        <h1 className="text-3xl sm:text-4xl font-bold text-white">
+          AI Image Editor
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Edit prompts and generate AI-enhanced images using Google Gemini
         </p>
-
-        {/* Credit Status */}
-        {userCredits && (
-          <div className="mt-6 flex items-center justify-center space-x-4">
-            <div className="bg-card/50 backdrop-blur-sm border border-muted/20 rounded-lg px-6 py-3">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  {userCredits.isAdmin ? (
-                    <>
-                      <div className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div>
-                      <span className="text-sm font-bold text-purple-600">
-                        ADMIN: Unlimited Generations
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <div className={`w-2 h-2 rounded-full ${userCredits.remainingCredits > 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                      <span className="text-sm font-medium">
-                        Daily Generations: {userCredits.dailyGenerations}/2
-                      </span>
-                    </>
-                  )}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {userCredits.isAdmin
-                    ? 'Admin access - unlimited generations'
-                    : userCredits.remainingCredits > 0
-                      ? `${userCredits.remainingCredits} remaining today`
-                      : 'Limit reached - resets tomorrow'
-                  }
-                </div>
-        </div>
-        </div>
-          </div>
-        )}
       </div>
 
       {/* Current Item Display */}
       {currentItem ? (
         <div className="space-y-6">
-          {/* Post Info */}
-          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 shadow-xl">
-            <CardHeader className="pb-4">
-      <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-500 rounded-full">
-                    <CheckCircle className="h-6 w-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <CardTitle className="text-xl font-bold">Ready for Editing</CardTitle>
-                    <CardDescription className="text-muted-foreground">
-                      Modify the AI-generated prompt below and generate your edited image
-                  </CardDescription>
+          {/* Source Info Card */}
+          <div className="nano-card p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-[hsl(var(--nano-green))]/10 flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-6 h-6 text-[hsl(var(--nano-green))]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <h3 className="text-lg font-semibold text-white truncate">{currentItem.post.title}</h3>
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-[hsl(var(--nano-blue))]/20 text-[hsl(var(--nano-blue))]">
+                    Step 2: Edit
+                  </span>
                 </div>
-                  <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 font-semibold">
-                    Step 2: AI Image Generation
-                  </Badge>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                  {currentItem.post.description}
+                </p>
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span>By {currentItem.post.author}</span>
+                  <span>{new Date(currentItem.post.created_utc * 1000).toLocaleDateString()}</span>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="bg-card p-6 rounded-xl border shadow-sm">
-                  <h4 className="font-semibold mb-3 text-card-foreground">{currentItem.post.title}</h4>
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                    {currentItem.post.description}
-                  </p>
-                  <div className="flex items-center space-x-6 text-xs text-muted-foreground">
-                    <span className="flex items-center">
-                      <span className="font-medium">By</span> {currentItem.post.author}
-                    </span>
-                    <span>{new Date(currentItem.post.created_utc * 1000).toLocaleDateString()}</span>
-                  </div>
-                </div>
+            </div>
 
-                <div
-                  className="relative aspect-video overflow-hidden rounded-xl border bg-card shadow-md cursor-pointer hover:shadow-lg transition-all duration-300 group"
-                  onClick={() => showImage(
-                    currentItem.post.imageUrl,
-                    'Original Image',
-                    currentItem.post.imageUrl,
-                    currentItem.post.postUrl
-                  )}
-                >
-                  <Image
-                    src={currentItem.post.imageUrl}
-                    alt="Original Reddit image"
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 rounded-xl"></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Edit Prompt */}
-          <Card className="shadow-lg border-muted/20">
-            <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg">
-              <CardTitle className="flex items-center space-x-3 text-lg">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Wand2 className="h-5 w-5 text-primary" />
-                </div>
-                <span>Edit Prompt (Editable)</span>
-              </CardTitle>
-              <CardDescription className="text-muted-foreground">
-                Modify this AI-generated prompt to customize your image editing requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <textarea
-                value={editPrompt}
-                onChange={(e) => setEditPrompt(e.target.value)}
-                className="w-full p-4 border border-input rounded-xl resize-none focus:ring-2 focus:ring-primary/50 focus:border-primary bg-background text-foreground transition-all duration-200 min-h-[120px]"
-                rows={4}
-                placeholder="Enter your edit instructions..."
+            {/* Original Image Preview */}
+            <div
+              className="mt-6 nano-image-container aspect-video cursor-pointer"
+              onClick={() => showImage(
+                currentItem.post.imageUrl,
+                'Original Image',
+                currentItem.post.imageUrl,
+                currentItem.post.postUrl
+              )}
+            >
+              <Image
+                src={currentItem.post.imageUrl}
+                alt="Original image"
+                fill
+                className="object-cover"
               />
-            </CardContent>
-          </Card>
+              <span className="nano-comparison-label">Original</span>
+            </div>
+          </div>
 
-          {/* Generate Button */}
-          <div className="flex justify-center">
+          {/* Edit Prompt Card */}
+          <div className="nano-card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-[hsl(var(--nano-purple))]/10 flex items-center justify-center">
+                <Wand2 className="w-5 h-5 text-[hsl(var(--nano-purple))]" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">Edit Prompt</h3>
+                <p className="text-sm text-muted-foreground">Modify the prompt to customize your edit</p>
+              </div>
+            </div>
+            
+            <Textarea
+              value={editPrompt}
+              onChange={(e) => setEditPrompt(e.target.value)}
+              className="min-h-[120px] bg-secondary/50 border-border/50 focus:border-[hsl(var(--nano-purple))] resize-none text-base mb-4"
+              placeholder="Enter your edit instructions..."
+            />
+
             <Button
               onClick={generateEditedImage}
-              disabled={isEditing || !editPrompt.trim() || (userCredits && !userCredits.isAdmin ? userCredits.remainingCredits <= 0 : false)}
-              size="lg"
-              className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isEditing || !editPrompt.trim()}
+              className="w-full h-14 text-base font-semibold nano-button"
             >
               {isEditing ? (
                 <>
-                  <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                  <Loader2 className="w-5 h-5 mr-3 animate-spin" />
                   Generating AI Image...
-                </>
-              ) : userCredits && !userCredits.isAdmin && userCredits.remainingCredits <= 0 ? (
-                <>
-                  <Wand2 className="mr-3 h-5 w-5" />
-                  Daily Limit Reached
                 </>
               ) : (
                 <>
-                  <Wand2 className="mr-3 h-5 w-5" />
+                  <Sparkles className="w-5 h-5 mr-3" />
                   Generate Edited Image
                 </>
               )}
@@ -795,285 +652,253 @@ export function EditorView() {
           </div>
         </div>
       ) : (
-        <Card className="text-center py-20 border-dashed border-muted-foreground/20 bg-gradient-to-br from-muted/20 to-muted/10">
-          <CardContent className="space-y-6">
-            <div className="relative">
-              <Wand2 className="mx-auto h-20 w-20 text-muted-foreground/50" />
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-muted-foreground/20 rounded-full animate-pulse"></div>
-            </div>
-        <div>
-              <h3 className="text-xl font-semibold text-muted-foreground mb-2">No Items to Edit</h3>
-              <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                Go to the Queue tab to analyze a Reddit post and send it here for editing.
+        /* Empty State */
+        <div className="nano-card p-12 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-secondary/50 flex items-center justify-center mx-auto mb-6">
+            <Wand2 className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h3 className="text-xl font-semibold text-white mb-2">No Items to Edit</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Go to the Upload tab to add an image and send it here for editing.
           </p>
         </div>
-          </CardContent>
-        </Card>
       )}
 
       {/* Edit Result Display */}
       {editResult && (
-        <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 shadow-xl mobile-card">
-          <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center space-x-3 flex-1">
-                <div className="p-2 bg-green-500 rounded-full flex-shrink-0 touch-target">
-                  <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg sm:text-xl font-bold mobile-responsive-heading">AI Image Generated Successfully!</CardTitle>
-                  <CardDescription className="text-muted-foreground text-sm sm:text-base">
-                    Your edited image is ready for download
-                  </CardDescription>
-                </div>
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 font-semibold text-xs sm:text-sm flex-shrink-0">
-                  Step 3: Image Generated
-                </Badge>
+        <div className="nano-card p-6 nano-slide-up border-[hsl(var(--nano-green))]/30">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-[hsl(var(--nano-green))]/10 flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-[hsl(var(--nano-green))]" />
               </div>
-              <div className="flex-shrink-0">
-                <Button
-                  onClick={() => saveToHistory(editResult)}
-                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 mobile-button w-full sm:w-auto"
-                >
-                  <Save className="mr-2 h-4 w-4" />
-                  Save to History
-                </Button>
+              <div>
+                <h3 className="text-lg font-semibold text-white">AI Image Generated!</h3>
+                <p className="text-sm text-muted-foreground">Your edited image is ready</p>
               </div>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Comparison Mode Toggle */}
-            <div className="flex justify-center">
-              <div className="flex bg-muted p-1 rounded-lg border shadow-sm">
-          <Button
-                  variant={comparisonMode === 'side-by-side' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setComparisonMode('side-by-side')}
-                  className={`rounded-md transition-all duration-200 font-medium ${
-                    comparisonMode === 'side-by-side'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                  }`}
-          >
-            Side by Side
-          </Button>
-          <Button
-                  variant={comparisonMode === 'overlay' ? 'default' : 'ghost'}
-            size="sm"
-                  onClick={() => setComparisonMode('overlay')}
-                  className={`rounded-md transition-all duration-200 font-medium ${
-                    comparisonMode === 'overlay'
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                  }`}
-                >
-                  Overlay
-          </Button>
-        </div>
-      </div>
+            <Button
+              onClick={() => saveToHistory(editResult)}
+              className="h-12 px-6 font-semibold bg-[hsl(var(--nano-green))] hover:bg-[hsl(var(--nano-green))]/90 text-black"
+            >
+              <Save className="w-5 h-5 mr-2" />
+              Save to History
+            </Button>
+          </div>
 
-              {comparisonMode === 'side-by-side' ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Original Image */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-foreground flex items-center space-x-2">
-                      <ImageIcon className="h-4 w-4 text-primary" />
-                      <span>Original Image</span>
-                    </h3>
-                    {currentItem && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDownload(currentItem.post.imageUrl, 'original.jpg')}
-                        className="border-muted-foreground/20 hover:bg-muted/50 transition-all duration-200"
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download
-                      </Button>
-                    )}
-                    </div>
-                  <div
-                    className="relative aspect-video overflow-hidden rounded-lg border bg-card cursor-pointer hover:opacity-90 transition-opacity"
-                    onClick={() => currentItem && showImage(
-                      currentItem.post.imageUrl,
-                      'Original Image',
-                      currentItem.post.imageUrl,
-                      currentItem.post.postUrl
-                    )}
-                  >
-                    {currentItem && (
-                      <Image
-                        src={currentItem.post.imageUrl}
-                        alt="Original image"
-                        fill
-                        className="object-cover"
-                        unoptimized={currentItem.post.imageUrl?.startsWith('data:')}
-                      />
-                    )}
-                    </div>
-                  </div>
+          {/* Comparison Mode Toggle */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex p-1 rounded-xl bg-secondary/50 border border-border/30">
+              <button
+                onClick={() => setComparisonMode('side-by-side')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  comparisonMode === 'side-by-side'
+                    ? 'bg-[hsl(var(--nano-blue))] text-white'
+                    : 'text-muted-foreground hover:text-white'
+                }`}
+              >
+                <ArrowLeftRight className="w-4 h-4 inline mr-2" />
+                Side by Side
+              </button>
+              <button
+                onClick={() => setComparisonMode('overlay')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  comparisonMode === 'overlay'
+                    ? 'bg-[hsl(var(--nano-blue))] text-white'
+                    : 'text-muted-foreground hover:text-white'
+                }`}
+              >
+                <Eye className="w-4 h-4 inline mr-2" />
+                Overlay
+              </button>
+            </div>
+          </div>
 
-                {/* Edited Image */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-foreground flex items-center space-x-2">
-                      <Wand2 className="h-4 w-4 text-primary" />
-                      <span>AI-Edited Image</span>
-                    </h3>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-muted-foreground/20 hover:bg-muted/50 transition-all duration-200"
-                      onClick={() => handleDownload(
-                        editResult.generatedImages?.[0] || editResult.editedContent,
-                        'ai-edited.jpg'
-                      )}
-                      >
-                        <Download className="mr-2 h-4 w-4" />
-                        Download
-                      </Button>
-                    </div>
-
-                  {editResult.generatedImages && editResult.generatedImages.length > 0 ? (
-                    <div className="space-y-4">
-                      {editResult.generatedImages.map((imageUrl, index) => (
-                        <div
-                          key={index}
-                          className="relative aspect-video overflow-hidden rounded-lg border bg-card cursor-pointer hover:opacity-90 transition-opacity"
-                          onClick={() => showImage(
-                            imageUrl,
-                            `AI Edited Image ${index + 1}`,
-                            imageUrl
-                          )}
-                        >
-                          <Image
-                            src={imageUrl}
-                            alt={`AI-generated edited image ${index + 1}`}
-                            fill
-                            className="object-cover"
-                            unoptimized={imageUrl?.startsWith('data:')}
-                          />
-                        </div>
-                      ))}
-                      <div className="text-center">
-                        <p className="text-xs text-green-600">
-                          ✨ AI-generated images with SynthID watermarks
-                        </p>
-                      </div>
-                    </div>
-                  ) : editResult.editedContent.includes('data:image') ? (
-                    <div
-                      className="relative aspect-video overflow-hidden rounded-lg border bg-card cursor-pointer hover:opacity-90 transition-opacity"
-                      onClick={() => showImage(
-                        editResult.editedContent.match(/data:image[^"']+/)?.[0] || '',
-                        'AI Edited Image',
-                        editResult.editedContent.match(/data:image[^"']+/)?.[0] || ''
-                      )}
-                    >
-                      <Image
-                        src={editResult.editedContent.match(/data:image[^"']+/)?.[0] || ''}
-                        alt="AI-generated edited image"
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-sm text-muted-foreground">
-                        Image generated successfully! Check the download link above.
-                      </p>
-                    </div>
-                  )}
-                  </div>
-                </div>
-              ) : (
-              /* Overlay Mode */
-                <div className="space-y-4">
-                <div className="flex items-center justify-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setShowOriginal(!showOriginal)}
-                      >
-                        {showOriginal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                      <span className="text-sm">
-                    {showOriginal ? 'Showing Original' : 'Showing Edited'}
-                      </span>
+          {comparisonMode === 'side-by-side' ? (
+            <div className="nano-comparison">
+              {/* Original */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Original</span>
+                  {currentItem && (
                     <Button
+                      variant="ghost"
                       size="sm"
-                      variant="outline"
-                    onClick={() => handleDownload(
-                      showOriginal
-                        ? (currentItem?.post.imageUrl || '')
-                        : (editResult.generatedImages?.[0] || editResult.editedContent),
-                      showOriginal ? 'original.jpg' : 'ai-edited.jpg'
-                    )}
+                      onClick={() => handleDownload(currentItem.post.imageUrl, 'original.jpg')}
+                      className="text-muted-foreground hover:text-white"
                     >
-                      <Download className="mr-2 h-4 w-4" />
-                    Download Current
+                      <Download className="w-4 h-4 mr-1" />
+                      Download
                     </Button>
-                  </div>
-
-                                <div
-                  className="relative aspect-video overflow-hidden rounded-lg border bg-card cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => {
-                    const imageSrc = showOriginal
-                      ? (currentItem?.post.imageUrl || '')
-                      : (editResult.generatedImages?.[0] || editResult.editedContent);
-                    const imageAlt = showOriginal
-                      ? 'Original Image'
-                      : 'AI Edited Image';
-                    const downloadUrl = showOriginal
-                      ? (currentItem?.post.imageUrl || '')
-                      : (editResult.generatedImages?.[0] || editResult.editedContent);
-                    const externalUrl = showOriginal ? currentItem?.post.postUrl : undefined;
-
-                    showImage(imageSrc, imageAlt, downloadUrl, externalUrl);
-                  }}
+                  )}
+                </div>
+                <div
+                  className="nano-image-container aspect-video cursor-pointer"
+                  onClick={() => currentItem && showImage(
+                    currentItem.post.imageUrl,
+                    'Original Image',
+                    currentItem.post.imageUrl,
+                    currentItem.post.postUrl
+                  )}
                 >
+                  {currentItem && (
                     <Image
-                    src={showOriginal
-                      ? (currentItem?.post.imageUrl || '')
-                      : (editResult.generatedImages?.[0] || editResult.editedContent)
-                    }
-                      alt="Comparison image"
+                      src={currentItem.post.imageUrl}
+                      alt="Original"
                       fill
                       className="object-cover"
+                      unoptimized={currentItem.post.imageUrl?.startsWith('data:')}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* Edited */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-[hsl(var(--nano-green))]">✨ AI Enhanced</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDownload(
+                      editResult.generatedImages?.[0] || editResult.editedContent,
+                      'ai-edited.jpg'
+                    )}
+                    className="text-muted-foreground hover:text-white"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Download
+                  </Button>
+                </div>
+
+                {editResult.generatedImages && editResult.generatedImages.length > 0 ? (
+                  <div className="space-y-4">
+                    {editResult.generatedImages.map((imageUrl, index) => (
+                      <div
+                        key={index}
+                        className="nano-image-container aspect-video cursor-pointer nano-pulse-glow"
+                        onClick={() => showImage(imageUrl, `AI Edited Image ${index + 1}`, imageUrl)}
+                      >
+                        <Image
+                          src={imageUrl}
+                          alt={`AI edited ${index + 1}`}
+                          fill
+                          className="object-cover"
+                          unoptimized={imageUrl?.startsWith('data:')}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : editResult.editedContent.includes('data:image') ? (
+                  <div
+                    className="nano-image-container aspect-video cursor-pointer nano-pulse-glow"
+                    onClick={() => showImage(
+                      editResult.editedContent.match(/data:image[^"']+/)?.[0] || '',
+                      'AI Edited Image',
+                      editResult.editedContent.match(/data:image[^"']+/)?.[0] || ''
+                    )}
+                  >
+                    <Image
+                      src={editResult.editedContent.match(/data:image[^"']+/)?.[0] || ''}
+                      alt="AI edited"
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
                   </div>
-        </div>
-      )}
-
-            {/* Edit Details */}
-            <Card className="bg-card/80 backdrop-blur-sm border-muted/20 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-muted/20 to-transparent">
-                <CardTitle className="text-sm font-semibold text-foreground">Edit Details</CardTitle>
-          </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span>Method:</span>
-                  <span className="font-medium">
-                    {editResult.method === 'google_gemini' ? 'Google Gemini API' :
-                     editResult.method === 'base64' ? 'Base64 Upload' : 'Direct URL'}
-                  </span>
-                    </div>
-                <div className="flex justify-between">
-                  <span>Generated:</span>
-                  <span className="font-medium">{new Date(editResult.timestamp).toLocaleString()}</span>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-muted-foreground">
+                      Image generated successfully! Check the download link above.
+                    </p>
                   </div>
-                {editResult.generatedImages && (
-                  <div className="flex justify-between">
-                    <span>Images Generated:</span>
-                    <span className="font-medium">{editResult.generatedImages.length}</span>
+                )}
+              </div>
+            </div>
+          ) : (
+            /* Overlay Mode */
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowOriginal(!showOriginal)}
+                  className="text-muted-foreground hover:text-white"
+                >
+                  {showOriginal ? <EyeOff className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+                  {showOriginal ? 'Showing Original' : 'Showing Edited'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDownload(
+                    showOriginal
+                      ? (currentItem?.post.imageUrl || '')
+                      : (editResult.generatedImages?.[0] || editResult.editedContent),
+                    showOriginal ? 'original.jpg' : 'ai-edited.jpg'
+                  )}
+                  className="text-muted-foreground hover:text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Current
+                </Button>
+              </div>
+
+              <div
+                className="nano-image-container aspect-video cursor-pointer"
+                onClick={() => {
+                  const imageSrc = showOriginal
+                    ? (currentItem?.post.imageUrl || '')
+                    : (editResult.generatedImages?.[0] || editResult.editedContent)
+                  const imageAlt = showOriginal ? 'Original Image' : 'AI Edited Image'
+                  const downloadUrl = showOriginal
+                    ? (currentItem?.post.imageUrl || '')
+                    : (editResult.generatedImages?.[0] || editResult.editedContent)
+                  const externalUrl = showOriginal ? currentItem?.post.postUrl : undefined
+
+                  showImage(imageSrc, imageAlt, downloadUrl, externalUrl)
+                }}
+              >
+                <Image
+                  src={showOriginal
+                    ? (currentItem?.post.imageUrl || '')
+                    : (editResult.generatedImages?.[0] || editResult.editedContent)
+                  }
+                  alt="Comparison"
+                  fill
+                  className="object-cover"
+                />
+                <span className={`nano-comparison-label ${showOriginal ? '' : 'bg-[hsl(var(--nano-green))]/80'}`}>
+                  {showOriginal ? 'Original' : 'AI Enhanced'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Edit Details */}
+          <div className="mt-6 p-4 rounded-xl bg-secondary/30 border border-border/30">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground mb-1">Method</p>
+                <p className="font-medium text-white">
+                  {editResult.method === 'google_gemini' ? 'Google Gemini' :
+                   editResult.method === 'base64' ? 'Base64 Upload' : 'Direct URL'}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground mb-1">Generated</p>
+                <p className="font-medium text-white">{new Date(editResult.timestamp).toLocaleString()}</p>
+              </div>
+              {editResult.generatedImages && (
+                <div>
+                  <p className="text-muted-foreground mb-1">Images</p>
+                  <p className="font-medium text-white">{editResult.generatedImages.length}</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-          </CardContent>
-        </Card>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

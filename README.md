@@ -1,21 +1,28 @@
-# PixelPrompt - AI-Powered Image Editor
+# 🍌 Nano - AI-Powered Image Editor
 
-![PixelPrompt Screenshot](./screenshot.jpg)
+<div align="center">
+  <img src="public/logo-icon.png" alt="Nano Logo" width="120" height="120" />
+  
+  <h3>Transform your images with AI</h3>
+  
+  <p>Upload any image and describe the changes you want — powered by Google Gemini AI</p>
 
-**Version 0.2.0**
+  [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/4mohdisa/nano)
+  
+  [Live Demo](https://nano-edit.vercel.app) · [Report Bug](https://github.com/4mohdisa/nano/issues) · [Request Feature](https://github.com/4mohdisa/nano/issues)
+</div>
 
-PixelPrompt is an intelligent image editing assistant that allows you to upload photos and describe edits in natural language. Powered by Google Gemini AI, it automatically applies your requested changes to create professional-looking edited images.
+---
 
 ## ✨ Features
 
-- **🎨 Simple Upload Interface**: Drag-and-drop or browse to upload your images
-- **💬 Natural Language Prompts**: Describe edits in plain English - no technical skills needed
-- **⚡ Lightning Fast**: AI-powered editing in seconds using Google Gemini 2.5 Flash Image Preview
-- **🔒 Privacy First**: Secure processing with enterprise-grade security
-- **☁️ Cloud Storage**: Save your edits with Supabase-powered cloud storage
-- **📱 Mobile Responsive**: Works seamlessly on all devices
-- **🎯 Credit System**: 3 free generations per day for all users
-- **🌓 Dark/Light Mode**: Beautiful interface in both themes
+- **🎨 Natural Language Editing** — Describe edits in plain English, no technical skills needed
+- **⚡ Lightning Fast** — AI-powered editing in seconds using Google Gemini 2.5 Flash
+- **🖼️ Before/After Comparison** — Side-by-side and overlay comparison views
+- **💾 Local History** — Your edits are saved locally with IndexedDB and localStorage
+- **🌙 Dark Mode** — Beautiful Gemini-inspired dark theme
+- **📱 Fully Responsive** — Works seamlessly on desktop, tablet, and mobile
+- **🔒 Privacy First** — Images processed securely, never stored on servers
 
 ## 🚀 Quick Start
 
@@ -23,14 +30,14 @@ PixelPrompt is an intelligent image editing assistant that allows you to upload 
 
 - Node.js 18+ and npm/yarn
 - Google AI API key (for Gemini)
-- Supabase account (optional - works with localStorage fallback)
+- Supabase account (optional — works with localStorage fallback)
 
 ### Installation
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/4mohdisa/pixelprompt.git
-cd pixelprompt
+git clone https://github.com/4mohdisa/nano.git
+cd nano
 ```
 
 2. **Install dependencies**
@@ -49,10 +56,6 @@ GEMINI_API_KEY=your_google_ai_api_key_here
 # Optional: Supabase (falls back to localStorage if not configured)
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-# Optional: Admin Configuration
-ADMIN_ID=your_admin_email@example.com
-ADMIN_UID=your_admin_user_id
 ```
 
 4. **Run the development server**
@@ -61,89 +64,108 @@ npm run dev
 ```
 
 5. **Open your browser**
+
 Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 🎯 How to Use
 
-### Simple 3-Step Process:
+### Simple 3-Step Process
 
-1. **Upload**: Drag-and-drop your image or click to browse (supports PNG, JPG, WEBP up to 10MB)
-2. **Describe**: Enter a text prompt describing the edits you want (e.g., "Remove the person in the background and enhance the colors")
-3. **Generate**: Click "Continue to Editor" → Review prompt → "Generate Edited Image" → Download your result
+1. **Upload** — Drag-and-drop your image or click to browse (PNG, JPG, WEBP up to 10MB)
+2. **Describe** — Enter a text prompt describing the edits you want
+3. **Generate** — Click "Generate Edit" and download your AI-enhanced image
 
-### Tips for Best Results:
+### Example Prompts
 
-- Be specific about what you want to change
-- Describe the desired style or mood
-- Use high-quality, well-lit images
-- You can refine your prompt in the Editor before generating
+- "Remove the background and make it transparent"
+- "Add a sunset sky in the background"
+- "Make it look like a vintage photograph"
+- "Enhance the colors and increase contrast"
+- "Remove the person on the left side"
 
-## 🏗️ Tech Stack
+## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 15 (App Router) + TypeScript + TailwindCSS
-- **UI Components**: shadcn/ui + Radix UI
-- **Database**: Supabase PostgreSQL with Row Level Security
-- **AI**: Google Gemini 2.5 Flash + Gemini 2.5 Flash Image Preview
-- **Image Processing**: Sharp
-- **Authentication**: Supabase Auth (Google OAuth)
-- **Storage**: Multi-tier (Supabase + localStorage + IndexedDB)
-- **Analytics**: Vercel Analytics
+| Category | Technology |
+|----------|------------|
+| **Framework** | Next.js 15 (App Router) |
+| **Language** | TypeScript |
+| **Styling** | Tailwind CSS |
+| **UI Components** | shadcn/ui + Radix UI |
+| **AI** | Google Gemini 2.5 Flash |
+| **Database** | Supabase PostgreSQL (optional) |
+| **Storage** | IndexedDB + localStorage |
+| **Analytics** | Vercel Analytics |
+| **Deployment** | Vercel |
 
 ## 📂 Project Structure
 
 ```
-pixelprompt/
+nano/
+├── public/
+│   ├── favicon/           # Favicon files
+│   └── logo-icon.png      # App logo
 ├── src/
-│   ├── app/                    # Next.js app router
-│   │   ├── api/               # API routes
-│   │   │   ├── edit/          # Main image editing endpoint
-│   │   │   └── gemini/        # AI processing endpoints
-│   │   ├── app/               # Dashboard page
-│   │   ├── page.tsx           # Landing page
-│   │   └── layout.tsx         # Root layout
-│   ├── components/            # React components
-│   │   ├── ui/               # shadcn/ui components
-│   │   ├── upload-view.tsx   # Image upload interface
-│   │   ├── editor-view.tsx   # Image editor & comparison
-│   │   └── history-view.tsx  # Saved images gallery
-│   ├── lib/                  # Utilities and services
-│   │   ├── database.ts       # Multi-layer storage service
-│   │   ├── supabase.ts       # Supabase client
-│   │   └── auth-context.tsx  # Authentication provider
-│   └── types/                # TypeScript definitions
-├── public/                   # Static assets
-├── supabase-schema.sql      # Database schema
-└── README.md                # This file
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── edit/      # Image editing API endpoint
+│   │   ├── privacy/       # Privacy policy page
+│   │   ├── terms/         # Terms of service page
+│   │   ├── disclaimer/    # Disclaimer page
+│   │   ├── app/           # Dashboard page
+│   │   ├── page.tsx       # Home page with editor
+│   │   ├── layout.tsx     # Root layout
+│   │   └── globals.css    # Global styles & design system
+│   ├── components/
+│   │   ├── ui/            # shadcn/ui components
+│   │   ├── upload-view.tsx
+│   │   ├── editor-view.tsx
+│   │   ├── history-view.tsx
+│   │   └── image-viewer.tsx
+│   └── lib/
+│       ├── database.ts    # Multi-layer storage service
+│       ├── supabase.ts    # Supabase client
+│       └── utils.ts       # Utility functions
+├── UI_THEME.md            # Design system documentation
+└── README.md
 ```
+
+## 🎨 Design System
+
+Nano uses a Google Gemini-inspired dark theme with:
+
+- **Background**: `#0D0D0F` (almost black)
+- **Surface/Cards**: `#111113`
+- **Accent Colors**:
+  - Blue: `#3DB1FF`
+  - Purple: `#8A5CFF`
+  - Red: `#FF4F4F`
+  - Yellow: `#FFBB33`
+  - Green: `#4CE07D`
+
+See [UI_THEME.md](./UI_THEME.md) for complete design documentation.
 
 ## 🔧 Configuration
 
 ### Google AI Setup
 
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+1. Visit [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. Create a new API key
 3. Add it to your `.env.local` file as `GEMINI_API_KEY`
 
 ### Supabase Setup (Optional)
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Run the SQL schema from `supabase-schema.sql` in your Supabase SQL editor
+2. Run the SQL schema from `supabase-schema.sql`
 3. Add your project URL and anon key to `.env.local`
-4. The app will automatically use Supabase when configured, otherwise falls back to localStorage
-
-### Admin Access
-
-Set admin users by adding their email or user ID to `.env.local`:
-- Admins get unlimited generations (no daily limit)
-- Regular users get 2 free generations per day
+4. The app automatically falls back to localStorage if Supabase isn't configured
 
 ## 🚢 Deployment
 
 ### Deploy to Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/4mohdisa/pixelprompt)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/4mohdisa/nano)
 
-1. Connect your GitHub repository to Vercel
+1. Click the button above or connect your GitHub repository to Vercel
 2. Add environment variables in Vercel dashboard
 3. Deploy automatically on every push
 
@@ -164,63 +186,44 @@ npm run start    # Start production server
 npm run lint     # Run ESLint
 ```
 
-## 🔐 Security Features
+## 🔐 Privacy & Security
 
-- Row Level Security (RLS) on all database tables
-- Environment variable validation
-- Secure image processing pipeline
-- Google OAuth authentication
-- CSRF protection
-- Input sanitization
-
-## 🎨 Features in Detail
-
-### Credit System
-- Regular users: 3 free generations per day
-- Automatic daily reset at midnight
-- Admin users: Unlimited generations
-- Real-time credit display in dashboard
-
-### Storage System
-Three-tier fallback for reliability:
-1. **Supabase** (Primary) - Cloud storage for authenticated users
-2. **localStorage** (Fallback) - Browser storage (50 item limit)
-3. **IndexedDB** (Offline) - Persistent browser storage
-
-### Image Processing
-- Supports PNG, JPG, WEBP formats
-- Max file size: 10MB
-- Automatic image optimization with Sharp
-- Multi-strategy AI processing with fallbacks
-- Base64 support for uploaded images
+- **No Server Storage**: Images are processed and returned immediately, never stored
+- **Local History**: Edit history is stored only in your browser
+- **Secure Processing**: All API calls use HTTPS encryption
+- **No Tracking**: Minimal analytics, no personal data collection
 
 ## 🤝 Contributing
 
-Contributions are welcome! Feel free to:
+Contributions are welcome! Here's how you can help:
+
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-MIT License - feel free to use this project for personal or commercial purposes.
+This project is licensed under the MIT License — feel free to use it for personal or commercial purposes.
 
 ## 🙏 Acknowledgments
 
-- [Google Gemini AI](https://ai.google.dev/) for powerful AI models
-- [shadcn/ui](https://ui.shadcn.com/) for beautiful UI components
-- [Next.js](https://nextjs.org/) for the React framework
-- [Supabase](https://supabase.com/) for backend infrastructure
+- [Google Gemini AI](https://ai.google.dev/) — Powerful AI models
+- [shadcn/ui](https://ui.shadcn.com/) — Beautiful UI components
+- [Next.js](https://nextjs.org/) — React framework
+- [Tailwind CSS](https://tailwindcss.com/) — Utility-first CSS
+- [Vercel](https://vercel.com/) — Deployment platform
 
 ## 📧 Support
 
 For issues, questions, or feature requests:
-- Open an issue on GitHub
-- Provide detailed information and steps to reproduce
+- [Open an issue](https://github.com/4mohdisa/nano/issues)
+- [Start a discussion](https://github.com/4mohdisa/nano/discussions)
 
 ---
 
-**Built with ❤️ by Mohammed Isa**
-
-*Powered by Google Gemini AI*
+<div align="center">
+  <p>Built by <a href="https://github.com/4mohdisa">@4mohdisa</a></p>
+  <p>Powered by Google Gemini AI</p>
+</div>
