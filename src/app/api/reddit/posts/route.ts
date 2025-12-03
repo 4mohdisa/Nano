@@ -35,7 +35,8 @@ interface RedditApiResponse {
 }
 
 const googleGenAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null
-const googleGeminiModel = googleGenAI ? googleGenAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' }) : null
+// Use gemini-2.5-flash for text analysis (not image generation)
+const googleGeminiModel = googleGenAI ? googleGenAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) : null
 
 const TOKEN_URL = 'https://www.reddit.com/api/v1/access_token';
 const API_BASE = 'https://oauth.reddit.com';
