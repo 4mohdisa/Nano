@@ -14,11 +14,12 @@ if (!process.env.GEMINI_API_KEY) {
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 
-// Models from billing dashboard:
-// - gemini-2.5-flash: For text/parsing tasks (1K RPM, 1M TPM)
-// - gemini-2.5-flash-preview-image: For image generation/editing (500 RPM, 500K TPM)
+// Models from ListModels API:
+// - gemini-2.5-flash: For text/parsing tasks
+// - gemini-2.5-flash-image: For image generation/editing (stable)
+// - gemini-2.5-flash-image-preview: For image generation/editing (preview)
 const TEXT_MODEL = 'gemini-2.5-flash'
-const IMAGE_MODEL = 'gemini-2.5-flash-preview-image' // Exact name from billing dashboard
+const IMAGE_MODEL = 'gemini-2.5-flash-image' // From ListModels API
 
 export async function POST(request: NextRequest) {
   try {
