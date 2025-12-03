@@ -31,6 +31,19 @@ interface HistoryItem {
   processingTime?: number
 }
 
+interface LocalHistoryItem {
+  id: string
+  postId: string
+  postTitle: string
+  requestText: string
+  status: string
+  originalImageUrl: string
+  editedImageUrl?: string
+  editedContent?: string
+  timestamp: number
+  processingTime?: number
+}
+
 function NanoApp() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(null)
   const [prompt, setPrompt] = useState('')
@@ -49,9 +62,9 @@ function NanoApp() {
 
   const loadHistory = async () => {
     try {
-      const localHistory = await localBrowserSave.loadAllHistory()
+      const localHistory = await localBrowserSave.loadAllHistory() as LocalHistoryItem[]
       if (localHistory && localHistory.length > 0) {
-        const transformedHistory: HistoryItem[] = localHistory.map((item: any): HistoryItem => ({
+        const transformedHistory: HistoryItem[] = localHistory.map((item): HistoryItem => ({
           id: item.id,
           postId: item.postId,
           postTitle: item.postTitle,
@@ -209,7 +222,7 @@ function NanoApp() {
         const filteredData = allData.filter(item => item.id !== itemId)
         localBrowserSave.clearAllData()
         for (const item of filteredData.slice(0, 49)) {
-          await localBrowserSave.saveToLocalStorage(item as any)
+          await localBrowserSave.saveToLocalStorage(item as LocalHistoryItem)
         }
         setHistory(prev => prev.filter(item => item.id !== itemId))
       } catch (error) {

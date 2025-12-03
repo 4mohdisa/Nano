@@ -45,7 +45,7 @@ export default function PrivacyPolicy() {
             <section className="nano-card p-6">
               <h2 className="text-xl font-semibold text-white mb-4">1. Introduction</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Welcome to Nano ("we," "our," or "us"). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our AI-powered image editing service.
+                Welcome to Nano (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). We respect your privacy and are committed to protecting your personal data. This privacy policy explains how we collect, use, and safeguard your information when you use our AI-powered image editing service.
               </p>
             </section>
 
@@ -71,7 +71,7 @@ export default function PrivacyPolicy() {
             <section className="nano-card p-6">
               <h2 className="text-xl font-semibold text-white mb-4">4. Third-Party Services</h2>
               <div className="text-muted-foreground leading-relaxed space-y-4">
-                <p><strong className="text-white">Google Gemini AI:</strong> We use Google's Gemini AI service to process image edits. Your images are sent to Google's servers for processing. Please refer to Google's privacy policy for more information about how they handle data.</p>
+                <p><strong className="text-white">Google Gemini AI:</strong> We use Google&apos;s Gemini AI service to process image edits. Your images are sent to Google&apos;s servers for processing. Please refer to Google&apos;s privacy policy for more information about how they handle data.</p>
                 <p><strong className="text-white">Vercel Analytics:</strong> We use Vercel Analytics to collect anonymous usage statistics. This helps us understand how users interact with our service.</p>
               </div>
             </section>
@@ -93,7 +93,7 @@ export default function PrivacyPolicy() {
             </section>
 
             <section className="nano-card p-6">
-              <h2 className="text-xl font-semibold text-white mb-4">7. Children's Privacy</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">7. Children&apos;s Privacy</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Our service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13.
               </p>
@@ -102,7 +102,7 @@ export default function PrivacyPolicy() {
             <section className="nano-card p-6">
               <h2 className="text-xl font-semibold text-white mb-4">8. Changes to This Policy</h2>
               <p className="text-muted-foreground leading-relaxed">
-                We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.
+                We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the &quot;Last updated&quot; date.
               </p>
             </section>
 

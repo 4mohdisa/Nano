@@ -4,8 +4,38 @@ export const runtime = 'nodejs'
 import type { NextRequest } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
+// Reddit API types
+interface RedditPost {
+  id: string
+  title: string
+  selftext: string
+  url: string
+  permalink: string
+  created_utc: number
+  author: string
+  score: number
+  num_comments: number
+  subreddit: string
+  thumbnail: string
+  upvote_ratio: number
+  is_gallery?: boolean
+  media_metadata?: Record<string, { s?: { u?: string } }>
+  crosspost_parent_list?: RedditPost[]
+  preview?: {
+    images?: Array<{
+      source?: { url?: string }
+    }>
+  }
+}
+
+interface RedditApiResponse {
+  data: {
+    children: Array<{ data: RedditPost }>
+  }
+}
+
 const googleGenAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null
-const googleGeminiModel = googleGenAI ? googleGenAI.getGenerativeModel({ model: 'gemini-2.5-flash' }) : null
+const googleGeminiModel = googleGenAI ? googleGenAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' }) : null
 
 const TOKEN_URL = 'https://www.reddit.com/api/v1/access_token';
 const API_BASE = 'https://oauth.reddit.com';
@@ -141,7 +171,7 @@ Focus ONLY on technical editing requirements - remove/add objects, color changes
 
 
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     console.log('Starting Reddit GET request...');
     const token = await getAccessToken();
@@ -154,13 +184,14 @@ export async function GET(_req: NextRequest) {
     console.log('Reddit API response received successfully');
 
     // Extract and filter posts with images
-    const posts = response.data.children.map((child: any) => child.data);
+    const apiResponse = response as RedditApiResponse
+    const posts = apiResponse.data.children.map((child) => child.data)
 
     // Filter posts from last 24 hours and with images
-    const oneDayAgo = Date.now() / 1000 - (24 * 60 * 60);
+    const oneDayAgo = Date.now() / 1000 - (24 * 60 * 60)
 
     const imagePosts = posts
-      .filter((post: any) => {
+      .filter((post: RedditPost) => {
         // Check if post has an image
         const hasImage = post.url && (
           post.url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ||
@@ -175,7 +206,7 @@ export async function GET(_req: NextRequest) {
 
         return hasImage && isRecent;
       })
-      .map((post: any) => {
+      .map((post: RedditPost) => {
         // Get the best image URL available
         let imageUrl = post.url;
 
@@ -232,35 +263,35 @@ export async function GET(_req: NextRequest) {
     }), {
       headers: { 'Content-Type': 'application/json' },
     });
-  } catch (err: any) {
-    console.error('Reddit handler error:', err);
-    console.error('Stack trace:', err?.stack);
+  } catch (err: unknown) {
+    const error = err as Error & { stack?: string }
+    console.error('Reddit handler error:', error)
+    console.error('Stack trace:', error?.stack)
 
     // Check if it's a rate limiting error
-    const isRateLimited = err?.message?.includes('rate limit') ||
-                         err?.message?.includes('too many requests') ||
-                         err?.message?.includes('429');
+    const isRateLimited = error?.message?.includes('rate limit') ||
+                         error?.message?.includes('too many requests') ||
+                         error?.message?.includes('429')
 
     return new Response(
       JSON.stringify({
         ok: false,
-        error: String(err?.message || err),
+        error: String(error?.message || err),
         isRateLimited,
         solution: isRateLimited ?
-          "Reddit is rate limiting your requests. Please wait 5-10 minutes and try again. If this persists, consider using a different IP or implementing longer delays between requests." :
+          "Reddit is rate limiting your requests. Please wait 5-10 minutes and try again." :
           "Check your Reddit API credentials and ensure your app is properly registered.",
-        stack: err?.stack,
+        stack: error?.stack,
         envCheck: {
           hasRedditClientId: !!process.env.REDDIT_CLIENT_ID,
           hasRedditClientSecret: !!process.env.REDDIT_CLIENT_SECRET,
           hasRedditUsername: !!process.env.REDDIT_USERNAME,
           hasRedditPassword: !!process.env.REDDIT_PASSWORD,
-          hasGeminiApiKey: !!process.env.GEMINI_API_KEY,
-          hasOpenRouterApiKey: !!process.env.OPENROUTER_API_KEY
+          hasGeminiApiKey: !!process.env.GEMINI_API_KEY
         }
       }),
       { status: isRateLimited ? 429 : 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    )
   }
 }
 
@@ -331,16 +362,17 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
     });
 
-  } catch (err: any) {
-    console.error('Reddit post analysis error:', err);
+  } catch (err: unknown) {
+    const error = err as Error
+    console.error('Reddit post analysis error:', error)
     return new Response(
       JSON.stringify({
         ok: false,
-        error: String(err?.message || err),
+        error: error?.message || String(err),
         postId: null
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    )
   }
 }
 
@@ -413,14 +445,15 @@ Focus ONLY on technical editing requirements - remove/add objects, color changes
       headers: { 'Content-Type': 'application/json' },
     });
 
-  } catch (err: any) {
-    console.error('❌ Analysis error:', err);
+  } catch (err: unknown) {
+    const error = err as Error
+    console.error('❌ Analysis error:', error)
     return new Response(
       JSON.stringify({
         ok: false,
-        error: String(err?.message || err)
+        error: error?.message || String(err)
       }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    )
   }
 }

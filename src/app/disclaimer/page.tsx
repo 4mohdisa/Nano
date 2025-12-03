@@ -45,7 +45,7 @@ export default function Disclaimer() {
             <section className="nano-card p-6">
               <h2 className="text-xl font-semibold text-white mb-4">General Disclaimer</h2>
               <p className="text-muted-foreground leading-relaxed">
-                Nano is an AI-powered image editing tool provided for informational and creative purposes only. The Service is provided "as is" without any warranties, express or implied. We make no representations or warranties of any kind regarding the accuracy, reliability, or completeness of the AI-generated content.
+                Nano is an AI-powered image editing tool provided for informational and creative purposes only. The Service is provided &quot;as is&quot; without any warranties, express or implied. We make no representations or warranties of any kind regarding the accuracy, reliability, or completeness of the AI-generated content.
               </p>
             </section>
 

@@ -443,17 +443,16 @@ export function EditorView() {
       const { DatabaseService } = await import('@/lib/database')
 
       const dbHistoryItem = {
-        post_id: result.postId,
-        post_title: historyItem.postTitle,
-        request_text: historyItem.requestText,
-        analysis: result.analysis,
-        edit_prompt: editPrompt,
         original_image_url: historyItem.originalImageUrl,
         edited_image_url: historyItem.editedImageUrl,
-        post_url: historyItem.postUrl,
-        method: result.method || 'google_gemini',
+        prompt: editPrompt,
+        analysis: result.analysis || null,
+        source_type: historyItem.postUrl ? 'reddit' as const : 'upload' as const,
+        source_title: historyItem.postTitle || null,
+        source_url: historyItem.postUrl || null,
+        model: result.method || 'gemini',
         status: 'completed' as const,
-        processing_time: historyItem.processingTime
+        processing_time_ms: historyItem.processingTime
       }
 
       const dbResult = await DatabaseService.saveEditHistory(dbHistoryItem)

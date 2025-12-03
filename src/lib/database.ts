@@ -12,7 +12,7 @@ export class DatabaseService {
   }
 
   // Edit History
-  static async saveEditHistory(edit: Omit<Database['public']['Tables']['edit_history']['Insert'], 'user_id'>) {
+  static async saveEditHistory(edit: Database['public']['Tables']['edit_history']['Insert']) {
     console.log('DatabaseService.saveEditHistory called:', { hasSupabase: this.isSupabaseConfigured() })
 
     if (this.isSupabaseConfigured()) {

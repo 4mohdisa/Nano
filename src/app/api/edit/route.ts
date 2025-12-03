@@ -1,23 +1,27 @@
 // src/app/api/edit/route.ts
-export const runtime = 'nodejs'; // ensure Node runtime (Buffer required)
+export const runtime = 'nodejs'
 
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import sharp from 'sharp';
+import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import sharp from 'sharp'
 
-// Validate API key
+// Validate API key at startup
 if (!process.env.GEMINI_API_KEY) {
-  console.error('❌ GEMINI_API_KEY not found in environment variables');
+  console.error('❌ GEMINI_API_KEY not found in environment variables')
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+
+// Use the correct model for image generation/editing
 const geminiImageModel = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash-image-preview',
+  model: 'gemini-2.5-flash-preview-05-20',
   generationConfig: {
-    temperature: 0.7,
-    maxOutputTokens: 2048,
+    temperature: 1,
+    topP: 0.95,
+    topK: 64,
+    maxOutputTokens: 8192,
   }
-});
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -124,10 +128,11 @@ export async function POST(request: NextRequest) {
       console.log('✅ Received response from Google Gemini 2.5 Flash Image');
       console.log('📦 Raw response structure:', JSON.stringify(response, null, 2));
 
-    } catch (geminiError: any) {
+    } catch (geminiError: unknown) {
       console.error('❌ Gemini API error:', geminiError);
+      const error = geminiError as Error & { name?: string }
 
-      if (geminiError.message?.includes('timeout') || geminiError.name === 'AbortError') {
+      if (error.message?.includes('timeout') || error.name === 'AbortError') {
         console.log('⏰ Gemini API call timed out');
         return NextResponse.json({
           ok: false,

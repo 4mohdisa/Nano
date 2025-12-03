@@ -45,7 +45,7 @@ export default function TermsOfService() {
             <section className="nano-card p-6">
               <h2 className="text-xl font-semibold text-white mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing and using Nano ("the Service"), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service.
+                By accessing and using Nano (&quot;the Service&quot;), you accept and agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our Service.
               </p>
             </section>
 
@@ -80,8 +80,8 @@ export default function TermsOfService() {
               <h2 className="text-xl font-semibold text-white mb-4">5. Prohibited Uses</h2>
               <p className="text-muted-foreground leading-relaxed mb-4">You agree not to use the Service to:</p>
               <ul className="text-muted-foreground leading-relaxed space-y-2 list-disc list-inside">
-                <li>Create deepfakes or misleading media intended to deceive</li>
-                <li>Generate content that violates any person's privacy or rights</li>
+                <li>Create deepfakes or misleading media intended to deceive others</li>
+                <li>Generate content that violates any person&apos;s privacy or rights</li>
                 <li>Create illegal, harmful, threatening, or discriminatory content</li>
                 <li>Infringe on copyrights, trademarks, or other intellectual property rights</li>
                 <li>Distribute malware or engage in any malicious activities</li>
@@ -99,7 +99,7 @@ export default function TermsOfService() {
             <section className="nano-card p-6">
               <h2 className="text-xl font-semibold text-white mb-4">7. Limitation of Liability</h2>
               <p className="text-muted-foreground leading-relaxed">
-                THE SERVICE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE SERVICE.
+                THE SERVICE IS PROVIDED &quot;AS IS&quot; WITHOUT WARRANTIES OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY LAW, WE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE SERVICE.
               </p>
             </section>
 

@@ -58,12 +58,57 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-4. **Run the development server**
+4. **Set up Supabase (Optional)**
+
+If using Supabase, run this SQL in your Supabase SQL Editor:
+
+```sql
+-- Edit History Table
+create table public.edit_history (
+  id uuid default gen_random_uuid() primary key,
+  original_image_url text not null,
+  edited_image_url text,
+  prompt text not null,
+  analysis text,
+  source_type text default 'upload',
+  source_title text,
+  source_url text,
+  model text default 'gemini',
+  status text default 'completed' check (status in ('pending', 'processing', 'completed', 'failed')),
+  processing_time_ms integer,
+  error_message text,
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null
+);
+
+-- Analytics Table (anonymous usage tracking)
+create table public.analytics (
+  id uuid default gen_random_uuid() primary key,
+  event_type text not null check (event_type in ('page_view', 'edit_request', 'edit_complete', 'edit_failed')),
+  session_id text not null,
+  metadata jsonb,
+  created_at timestamptz default now() not null
+);
+
+-- Enable RLS and allow anonymous access
+alter table public.edit_history enable row level security;
+alter table public.analytics enable row level security;
+
+create policy "Allow anonymous access" on public.edit_history for all using (true) with check (true);
+create policy "Allow anonymous access" on public.analytics for all using (true) with check (true);
+
+-- Indexes
+create index edit_history_created_at_idx on public.edit_history (created_at desc);
+create index analytics_event_type_idx on public.analytics (event_type);
+create index analytics_session_idx on public.analytics (session_id);
+```
+
+5. **Run the development server**
 ```bash
 npm run dev
 ```
 
-5. **Open your browser**
+6. **Open your browser**
 
 Navigate to [http://localhost:3000](http://localhost:3000)
 
