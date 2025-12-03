@@ -13,9 +13,9 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 // Use the correct model for image generation/editing
-// gemini-2.5-flash-image is the stable model for image generation and editing
+// gemini-2.5-flash-preview-image is the model available in your billing dashboard
 const geminiImageModel = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash-image',
+  model: 'gemini-2.5-flash-preview-image',
 })
 
 export async function POST(request: NextRequest) {
