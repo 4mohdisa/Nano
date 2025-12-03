@@ -1,6 +1,9 @@
 // src/app/api/edit/route.ts
 export const runtime = 'nodejs'
 
+// Increase body size limit for image uploads (default is 4MB, we need more)
+export const maxDuration = 60 // 60 seconds timeout
+
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import sharp from 'sharp'
@@ -75,31 +78,51 @@ export async function POST(request: NextRequest) {
 
     console.log('📄 Content-Type:', contentType);
 
-    // Step 2: Convert to Sharp image (similar to PIL in Python)
+    // Step 2: Convert to Sharp image and compress if needed
     let processedImageBuffer: Buffer;
+    let finalMimeType = 'image/jpeg';
 
     try {
-      // Use Sharp to process the image (like PIL in Python)
+      // Use Sharp to process the image
       const sharpImage = sharp(Buffer.from(imageBuffer));
 
       // Get image info
       const metadata = await sharpImage.metadata();
       console.log(`🖼️ Image info: ${metadata.format} ${metadata.width}x${metadata.height} ${metadata.channels} channels`);
 
-      // Convert to buffer for Gemini
-      processedImageBuffer = await sharpImage.toBuffer();
+      // Resize if image is too large (max 4096px on longest side for Gemini)
+      const maxDimension = 4096;
+      let pipeline = sharpImage;
+      
+      if (metadata.width && metadata.height) {
+        if (metadata.width > maxDimension || metadata.height > maxDimension) {
+          console.log('📐 Resizing image to fit within', maxDimension, 'px');
+          pipeline = pipeline.resize(maxDimension, maxDimension, {
+            fit: 'inside',
+            withoutEnlargement: true
+          });
+        }
+      }
+
+      // Convert to JPEG with quality 85 to reduce size
+      processedImageBuffer = await pipeline
+        .jpeg({ quality: 85 })
+        .toBuffer();
+      
+      console.log('✅ Compressed image size:', processedImageBuffer.length, 'bytes');
 
     } catch (sharpError) {
       console.error('❌ Sharp processing error:', sharpError);
       // Fallback to original buffer if Sharp fails
       processedImageBuffer = Buffer.from(imageBuffer);
+      finalMimeType = contentType;
     }
 
     // Step 3: Send to Google Gemini 2.5 Flash Image Preview (exactly as user requested)
     console.log('🤖 Sending to Google Gemini 2.5 Flash Image Preview...');
     console.log('📋 Prompt:', changeSummary);
     console.log('📊 Image size:', processedImageBuffer.length, 'bytes');
-    console.log('📄 MIME type:', contentType);
+    console.log('📄 MIME type:', finalMimeType);
 
     let response;
     try {
@@ -112,7 +135,7 @@ export async function POST(request: NextRequest) {
         changeSummary,
         {
           inlineData: {
-            mimeType: contentType,
+            mimeType: finalMimeType,
             data: processedImageBuffer.toString('base64')
           }
         }

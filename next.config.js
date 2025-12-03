@@ -11,14 +11,12 @@ const nextConfig = {
       'i.imgur.com'
     ],
   },
-  // experimental: {
-  //   outputFileTracingExcludes: [
-  //     "node_modules/.cache/**",
-  //     "node_modules/.bin/**",
-  //     ".next/cache/**",
-  //     ".git/**"
-  //   ]
-  // }
+  // Increase body size limit for API routes (for large image uploads)
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
 }
 
 module.exports = nextConfig
