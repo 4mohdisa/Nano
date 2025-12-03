@@ -27,6 +27,13 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
     resetZoom()
   }
 
+  // Reset loading state when src changes
+  useEffect(() => {
+    setIsLoading(true)
+    setImageDimensions({ width: 0, height: 0 })
+    setZoom(1)
+  }, [src])
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
