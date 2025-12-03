@@ -2,7 +2,6 @@
 
 import { useEffect, useState, createContext, useContext, ReactNode } from 'react'
 import { X, Download, ExternalLink, ZoomIn, ZoomOut, HelpCircle } from 'lucide-react'
-import Image from 'next/image'
 
 interface ImageViewerProps {
   src: string
@@ -13,13 +12,14 @@ interface ImageViewerProps {
 }
 
 export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: ImageViewerProps) {
-  const [zoom, setZoom] = useState(0.6) // Start with 60% zoom for better fit
+  const [zoom, setZoom] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [showHelp, setShowHelp] = useState(false)
+  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
 
   // Zoom controls
-  const zoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3))
-  const zoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.3))
+  const zoomIn = () => setZoom(prev => Math.min(prev * 1.25, 4))
+  const zoomOut = () => setZoom(prev => Math.max(prev / 1.25, 0.25))
   const resetZoom = () => setZoom(1)
 
   // Double click to reset zoom
@@ -71,21 +71,27 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
     }
   }
 
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight })
+    setIsLoading(false)
+  }
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-xl p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-xl"
       onClick={handleBackdropClick}
     >
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 rounded-full bg-white/10 hover:bg-white/20 p-3 text-white transition-all duration-200"
+        className="absolute top-4 right-4 z-20 rounded-full bg-white/10 hover:bg-white/20 p-3 text-white transition-all duration-200"
       >
-        <X className="h-5 w-5" />
+        <X className="h-6 w-6" />
       </button>
 
       {/* Action buttons */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
+      <div className="absolute top-4 left-4 z-20 flex items-center gap-2 flex-wrap">
         {downloadUrl && (
           <button
             onClick={handleDownload}
@@ -108,7 +114,7 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
         )}
 
         {/* Zoom Controls */}
-        <div className="flex items-center gap-1 bg-white/10 rounded-full px-2 py-1 ml-2">
+        <div className="flex items-center gap-1 bg-white/10 rounded-full px-2 py-1">
           <button
             onClick={zoomOut}
             className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
@@ -118,7 +124,7 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
           </button>
           <button
             onClick={resetZoom}
-            className="px-3 py-1 text-white hover:bg-white/10 rounded-full text-sm font-medium transition-colors min-w-[60px]"
+            className="px-3 py-1 text-white hover:bg-white/10 rounded-full text-sm font-medium transition-colors min-w-[60px] text-center"
             title="Reset Zoom (0)"
           >
             {Math.round(zoom * 100)}%
@@ -142,7 +148,7 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
 
       {/* Help Overlay */}
       {showHelp && (
-        <div className="absolute top-20 left-4 z-20 bg-black/80 backdrop-blur-xl rounded-2xl p-5 max-w-xs border border-white/10">
+        <div className="absolute top-20 left-4 z-30 bg-black/90 backdrop-blur-xl rounded-2xl p-5 max-w-xs border border-white/10">
           <div className="text-white text-sm space-y-3">
             <h3 className="font-semibold text-base mb-3">Keyboard Shortcuts</h3>
             <div className="space-y-2">
@@ -171,50 +177,59 @@ export function ImageViewer({ src, alt, onClose, downloadUrl, externalUrl }: Ima
       )}
 
       {/* Image container */}
-      <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+      <div 
+        className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 lg:p-16 overflow-auto"
+        onClick={handleBackdropClick}
+      >
+        {/* Loading spinner */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin"></div>
+          </div>
+        )}
+
+        {/* Image wrapper with zoom */}
         <div
-          className="relative max-w-[95vw] max-h-[95vh] w-auto h-auto"
+          className="relative flex items-center justify-center"
           style={{
             transform: `scale(${zoom})`,
             transformOrigin: 'center center',
-            transition: zoom === 1 ? 'transform 0.2s ease-out' : 'none'
+            transition: 'transform 0.2s ease-out'
           }}
         >
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-            </div>
-          )}
-
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src={src}
             alt={alt}
-            width={1920}
-            height={1080}
-            className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl cursor-pointer"
-            priority
-            unoptimized={src?.startsWith('data:')}
-            sizes="(max-width: 768px) 95vw, (max-width: 1200px) 90vw, 85vw"
-            onLoadingComplete={() => setIsLoading(false)}
-            onLoad={() => setIsLoading(false)}
+            onLoad={handleImageLoad}
             onDoubleClick={handleImageDoubleClick}
-            style={{ imageRendering: zoom > 1 ? 'auto' : 'auto' }}
+            className="max-w-[85vw] max-h-[85vh] w-auto h-auto object-contain rounded-lg shadow-2xl cursor-pointer select-none"
+            style={{
+              opacity: isLoading ? 0 : 1,
+              transition: 'opacity 0.3s ease-out'
+            }}
+            draggable={false}
           />
+        </div>
 
-          {/* Image info overlay */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 rounded-b-2xl">
-            <div className="flex justify-between items-end">
-              <div className="flex-1">
-                <p className="text-white font-medium">{alt}</p>
-                {zoom !== 1 && (
-                  <p className="text-white/60 text-sm mt-1">
-                    {Math.round(zoom * 100)}% • Double-click to reset
-                  </p>
-                )}
-              </div>
+        {/* Image info overlay - fixed at bottom */}
+        {!isLoading && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-black/80 backdrop-blur-sm rounded-full px-6 py-3 max-w-[90vw]">
+            <div className="flex items-center gap-4 text-sm">
+              <p className="text-white font-medium truncate">{alt}</p>
+              {imageDimensions.width > 0 && (
+                <span className="text-white/50 whitespace-nowrap">
+                  {imageDimensions.width} × {imageDimensions.height}
+                </span>
+              )}
+              {zoom !== 1 && (
+                <span className="text-white/50 whitespace-nowrap">
+                  {Math.round(zoom * 100)}%
+                </span>
+              )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
