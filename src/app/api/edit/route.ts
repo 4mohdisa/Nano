@@ -5,7 +5,6 @@ export const runtime = 'nodejs'
 export const maxDuration = 60 // 60 seconds timeout
 
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import sharp from 'sharp'
 
 // Validate API key at startup
@@ -13,13 +12,13 @@ if (!process.env.GEMINI_API_KEY) {
   console.error('❌ GEMINI_API_KEY not found in environment variables')
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 
-// Use the correct model for image generation/editing
-// gemini-2.5-flash-preview-image is the model available in your billing dashboard
-const geminiImageModel = genAI.getGenerativeModel({
-  model: 'gemini-2.5-flash-preview-image',
-})
+// Models from billing dashboard:
+// - gemini-2.5-flash: For text/parsing tasks (1K RPM, 1M TPM)
+// - gemini-2.5-flash-preview-image: For image generation/editing (500 RPM, 500K TPM)
+const TEXT_MODEL = 'gemini-2.5-flash'
+const IMAGE_MODEL = 'gemini-2.5-flash-preview-image' // Exact name from billing dashboard
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +31,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('🎨 Executing edit with Google Gemini 2.5 Flash Image...');
+    console.log('🎨 Executing edit with Google Gemini 2.5 Flash Image Preview...');
     console.log('Image URL:', imageUrl);
     console.log('Change Summary:', changeSummary);
 
@@ -118,33 +117,59 @@ export async function POST(request: NextRequest) {
       finalMimeType = contentType;
     }
 
-    // Step 3: Send to Google Gemini 2.5 Flash Image Preview (exactly as user requested)
-    console.log('🤖 Sending to Google Gemini 2.5 Flash Image Preview...');
+    // Step 3: Send to Google Gemini 2.5 Flash Image Preview for image editing
+    console.log('🤖 Sending to Google Gemini', IMAGE_MODEL, '...');
     console.log('📋 Prompt:', changeSummary);
     console.log('📊 Image size:', processedImageBuffer.length, 'bytes');
     console.log('📄 MIME type:', finalMimeType);
 
+    // Build the request for Gemini REST API - using image model for editing
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const requestBody = {
+      contents: [{
+        parts: [
+          {
+            inlineData: {
+              mimeType: finalMimeType,
+              data: processedImageBuffer.toString('base64')
+            }
+          },
+          {
+            text: changeSummary
+          }
+        ]
+      }],
+      generationConfig: {
+        responseModalities: ['TEXT', 'IMAGE'],
+        temperature: 1.0,
+      }
+    };
+
     let response;
     try {
-      // Add timeout for Gemini API call (45 seconds)
-      const geminiTimeoutId = setTimeout(() => {
-        console.log('⏰ Gemini API call timed out');
-      }, 45000);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-      response = await geminiImageModel.generateContent([
-        changeSummary,
-        {
-          inlineData: {
-            mimeType: finalMimeType,
-            data: processedImageBuffer.toString('base64')
-          }
-        }
-      ]);
+      const apiResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal
+      });
 
-      clearTimeout(geminiTimeoutId);
+      clearTimeout(timeoutId);
 
-      console.log('✅ Received response from Google Gemini 2.5 Flash Image');
-      console.log('📦 Raw response structure:', JSON.stringify(response, null, 2));
+      if (!apiResponse.ok) {
+        const errorText = await apiResponse.text();
+        console.error('❌ Gemini API HTTP error:', apiResponse.status, errorText);
+        throw new Error(`Gemini API error: ${apiResponse.status} - ${errorText}`);
+      }
+
+      response = await apiResponse.json();
+      console.log('✅ Received response from Google Gemini');
 
     } catch (geminiError: unknown) {
       console.error('❌ Gemini API error:', geminiError);
@@ -160,14 +185,15 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      throw geminiError; // Re-throw to be caught by outer catch
+      throw geminiError;
     }
 
-    // Step 4: Process the response (Google Gemini API format)
+    // Step 4: Process the response
     const generatedImages: string[] = [];
+    let analysisText = '';
 
     // Check for API errors first
-    if (response.response?.candidates?.[0]?.finishReason === 'SAFETY') {
+    if (response.candidates?.[0]?.finishReason === 'SAFETY') {
       console.log('🚫 Gemini blocked content due to safety filters');
       return NextResponse.json({
         ok: false,
@@ -177,36 +203,29 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (response.response && response.response.candidates && response.response.candidates.length > 0) {
-      const candidate = response.response.candidates[0];
+    if (response.candidates && response.candidates.length > 0) {
+      const candidate = response.candidates[0];
       console.log('🎯 Candidate finish reason:', candidate.finishReason);
-      console.log('📋 Candidate safety ratings:', candidate.safetyRatings);
 
       if (candidate.content && candidate.content.parts) {
         console.log(`📦 Found ${candidate.content.parts.length} parts in response`);
 
         for (const part of candidate.content.parts) {
           if (part.text) {
-            console.log('📝 Text response:', part.text);
+            console.log('📝 Text response:', part.text.substring(0, 200) + '...');
+            analysisText = part.text;
           } else if (part.inlineData) {
             console.log('🖼️ Processing image part');
-
-            // Convert binary image data to base64 data URL
             const imageData = part.inlineData.data;
             const mimeType = part.inlineData.mimeType || 'image/png';
             const dataUrl = `data:${mimeType};base64,${imageData}`;
-
             generatedImages.push(dataUrl);
             console.log(`✅ Generated image: ${mimeType}, size: ${imageData.length} chars`);
           }
         }
-      } else {
-        console.log('⚠️ No content in candidate');
-        console.log('📄 Full candidate:', JSON.stringify(candidate, null, 2));
       }
     } else {
       console.log('⚠️ No candidates in response');
-      console.log('📄 Full response:', JSON.stringify(response, null, 2));
     }
 
     if (generatedImages.length === 0) {
@@ -266,10 +285,6 @@ export async function POST(request: NextRequest) {
         } catch (originalError) {
           console.error('❌ Even original image processing failed:', originalError);
 
-          const textResponse = response.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
-                             response.response?.text() ||
-                             'Unable to process image. Please try again.';
-
           return NextResponse.json({
             ok: false,
             error: 'All processing methods failed',
@@ -277,7 +292,7 @@ export async function POST(request: NextRequest) {
             hasImageData: false,
             generatedImages: [],
             timestamp: new Date().toISOString(),
-            textResponse: textResponse
+            analysis: analysisText || 'Unable to process image. Please try again.'
           });
         }
       }
@@ -291,6 +306,7 @@ export async function POST(request: NextRequest) {
       method: 'google_gemini',
       hasImageData: true,
       generatedImages: generatedImages,
+      analysis: analysisText,
       timestamp: new Date().toISOString()
     });
 
