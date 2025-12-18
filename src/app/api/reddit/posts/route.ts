@@ -3,6 +3,7 @@ export const runtime = 'nodejs'
 
 import type { NextRequest } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { checkProtection, recordApiResult, createBlockedResponse } from '@/lib/rate-limiter'
 
 // Reddit API types
 interface RedditPost {
@@ -172,7 +173,14 @@ Focus ONLY on technical editing requirements - remove/add objects, color changes
 
 
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Check rate limiting, circuit breaker, and load shedding
+  const protection = checkProtection(request)
+  if (!protection.allowed) {
+    console.log(`🛡️ Request blocked for ${protection.clientId}: ${protection.reason}`)
+    return createBlockedResponse(protection.reason!, protection.retryAfter)
+  }
+
   try {
     console.log('Starting Reddit GET request...');
     const token = await getAccessToken();
@@ -255,6 +263,7 @@ export async function GET() {
       });
 
     console.log(`Found ${imagePosts.length} image posts from r/PhotoshopRequest in the last 24 hours`);
+    recordApiResult(true) // Record success for circuit breaker
 
     return new Response(JSON.stringify({
       ok: true,
@@ -268,6 +277,7 @@ export async function GET() {
     const error = err as Error & { stack?: string }
     console.error('Reddit handler error:', error)
     console.error('Stack trace:', error?.stack)
+    recordApiResult(false) // Record failure for circuit breaker
 
     // Check if it's a rate limiting error
     const isRateLimited = error?.message?.includes('rate limit') ||
@@ -298,6 +308,13 @@ export async function GET() {
 
 // POST endpoint to analyze and process a specific Reddit post
 export async function POST(request: NextRequest) {
+  // Check rate limiting, circuit breaker, and load shedding
+  const protection = checkProtection(request)
+  if (!protection.allowed) {
+    console.log(`🛡️ Request blocked for ${protection.clientId}: ${protection.reason}`)
+    return createBlockedResponse(protection.reason!, protection.retryAfter)
+  }
+
   try {
     const { postId } = await request.json();
 
@@ -437,6 +454,7 @@ Focus ONLY on technical editing requirements - remove/add objects, color changes
     const changeSummary = response.text().trim();
 
     console.log('✅ Analysis complete:', changeSummary);
+    recordApiResult(true) // Record success for circuit breaker
 
     return new Response(JSON.stringify({
       ok: true,
@@ -449,6 +467,7 @@ Focus ONLY on technical editing requirements - remove/add objects, color changes
   } catch (err: unknown) {
     const error = err as Error
     console.error('❌ Analysis error:', error)
+    recordApiResult(false) // Record failure for circuit breaker
     return new Response(
       JSON.stringify({
         ok: false,

@@ -6,6 +6,7 @@ export const maxDuration = 60 // 60 seconds timeout
 
 import { NextRequest, NextResponse } from 'next/server'
 import sharp from 'sharp'
+import { checkProtection, recordApiResult, createBlockedResponse } from '@/lib/rate-limiter'
 
 // Validate API key at startup
 if (!process.env.GEMINI_API_KEY) {
@@ -22,6 +23,13 @@ const TEXT_MODEL = 'gemini-2.5-flash'
 const IMAGE_MODEL = 'gemini-2.5-flash-image' // From ListModels API
 
 export async function POST(request: NextRequest) {
+  // Check rate limiting, circuit breaker, and load shedding
+  const protection = checkProtection(request)
+  if (!protection.allowed) {
+    console.log(`🛡️ Request blocked for ${protection.clientId}: ${protection.reason}`)
+    return createBlockedResponse(protection.reason!, protection.retryAfter)
+  }
+
   try {
     const { imageUrl, changeSummary } = await request.json();
 
@@ -300,6 +308,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`🎉 Success! Generated ${generatedImages.length} image(s)`);
+    recordApiResult(true) // Record success for circuit breaker
 
     return NextResponse.json({
       ok: true,
@@ -313,6 +322,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ Edit execution error:', error);
+    recordApiResult(false) // Record failure for circuit breaker
     return NextResponse.json(
       {
         ok: false,
